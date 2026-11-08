@@ -1,0 +1,22 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    # 코드 생성 파일은 생성기가 책임진다
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - lib/l10n/gen/**
+
+formatter:
+  page_width: 100
+
+linter:
+  rules:
+    # 앱 코드는 공개 API 문서 주석을 강제하지 않는다 (docstring 규칙은 서버에만, 08-conventions 2.5절)
+    public_member_api_docs: false
+    # 토큰·개인정보가 콘솔에 찍히지 않게 print 금지 (T21). very_good_analysis에도 있지만 명시
+    avoid_print: true
+    lines_longer_than_80_chars: false

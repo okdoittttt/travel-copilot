@@ -20,3 +20,24 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# 로컬 인증서 (개인키 포함)
+infra/nginx/certs/*
+!infra/nginx/certs/.gitkeep
+
+# Python 도구 캐시
+.mypy_cache/
+.ruff_cache/
+
+# Flutter / Dart
+app/.dart_tool/
+app/build/
+app/.flutter-plugins-dependencies
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/ephemeral/
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+*.jks
+*.keystore

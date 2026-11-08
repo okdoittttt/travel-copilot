@@ -1,0 +1,56 @@
+name: app
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/app.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/app.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+          cache: true
+
+      - name: 의존성 설치
+        run: flutter pub get
+
+      - name: 생성 파일 커밋 누락 확인
+        run: |
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+          git diff --exit-code -- . || (echo "::error::생성 파일이 커밋되지 않았습니다. build_runner 결과를 커밋하세요." && exit 1)
+
+      - name: 포맷 확인
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: 분석
+        run: flutter analyze
+
+      - name: 테스트
+        run: flutter test

@@ -35,7 +35,7 @@
 - 제외: AI 준비물 체크리스트(LLM 필요) → 2차, 오프라인 상태에서 수정 후 나중에 병합 → 2차
 
 **공통**
-- 소셜 로그인: 카카오 · Apple · Google (이메일/비밀번호 없음)
+- 소셜 로그인: Google 먼저(F1), 카카오 · Apple은 MVP 후반(F10) (이메일/비밀번호 없음)
 - 회원 탈퇴 (앱스토어 심사 필수 항목, 개인정보 삭제 포함)
 
 ### 2차 이후로 미룸
@@ -67,8 +67,8 @@
 |---|---|---|
 | API | FastAPI, Pydantic v2 | 확정 |
 | DB | PostgreSQL 16, SQLAlchemy 2.0, Alembic(마이그레이션) | 제안 |
-| 파일 저장소 | S3 호환 오브젝트 스토리지 (로컬은 MinIO) | 제안 |
-| 로컬 개발 환경 | Docker Compose (앱 + PostgreSQL + MinIO + Nginx) | 제안 |
+| 파일 저장소 | S3 호환 오브젝트 스토리지 (로컬 도구는 F7에서 결정 — ~~MinIO~~ 공식 이미지 배포 중단) | 제안 |
+| 로컬 개발 환경 | Docker Compose (서버 + PostgreSQL + Nginx, 파일 저장소는 F7에서 추가) | 제안 |
 | CI | GitHub Actions | 제안 |
 | 운영 호스팅 | 미정 → 배포 단계에서 결정 | 미정 |
 
