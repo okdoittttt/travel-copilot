@@ -76,14 +76,14 @@
 
 소셜 로그인은 Google만 먼저 구현한다. 공급자별 검증 코드를 교체 가능한 구조로 만들어, F10에서 카카오·Apple을 붙일 때 공통 부분(토큰 발급·갱신·폐기)은 손대지 않게 한다.
 
-- [ ] 인증 설계 확정 (명세에 포함): 액세스 토큰 형식(JWT vs 불투명), nonce 저장 방식, 공급자 추가 구조
-- [ ] 테이블: users, social_accounts, refresh_tokens
-- [ ] `POST /auth/nonce`, `POST /auth/{provider}/login` — ID 토큰 검증 (JWKS 캐시, iss·aud·exp·nonce)
-- [ ] `POST /auth/refresh` — 토큰 교체, 재사용 감지 시 묶음 폐기
-- [ ] `POST /auth/logout`, `GET·PATCH /me`
-- [ ] 인증 의존성 (`current_user`), 요청 횟수 제한 기반
-- [ ] 앱: S01 시작, S02 로그인 (Google 버튼만), secure storage 토큰 저장, dio 자동 갱신 인터셉터
-- [ ] 보안 테스트: 위조 토큰, 다른 앱용 토큰(aud), 만료 토큰, nonce 재사용, 리프레시 토큰 재사용, 이메일 같은 다른 공급자 계정이 합쳐지지 않음
+- [x] 인증 설계 확정 (명세에 포함): 액세스 토큰 형식(JWT vs 불투명), nonce 저장 방식, 공급자 추가 구조
+- [x] 테이블: users, social_accounts, refresh_tokens
+- [x] `POST /auth/nonce`, `POST /auth/{provider}/login` — ID 토큰 검증 (JWKS 캐시, iss·aud·exp·nonce)
+- [x] `POST /auth/refresh` — 토큰 교체, 재사용 감지 시 묶음 폐기
+- [x] `POST /auth/logout`, `GET·PATCH /me`
+- [x] 인증 의존성 (`current_user`), 요청 횟수 제한 기반
+- [x] 앱: S01 시작, S02 로그인 (Google 버튼만), secure storage 토큰 저장, dio 자동 갱신 인터셉터
+- [x] 보안 테스트: 위조 토큰, 다른 앱용 토큰(aud), 만료 토큰, nonce 재사용, 리프레시 토큰 재사용, 이메일 같은 다른 공급자 계정이 합쳐지지 않음
 
 **위협**: T01~T05 / **로드맵**: 1단계 전체
 

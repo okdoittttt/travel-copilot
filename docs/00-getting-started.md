@@ -1,7 +1,7 @@
 # 실행 가이드
 
 > 로컬에서 Travel Copilot을 설정하고, 실행하고, 동작을 확인하는 방법.
-> 기준: F0(기반) 완료 시점 (2026-11-08). 기능이 추가될 때마다 이 문서를 갱신한다.
+> 기준: F1(Google 로그인) 구현 시점 (2026-11-08). 기능이 추가될 때마다 이 문서를 갱신한다.
 
 ## 1. 구성 한눈에 보기
 
@@ -9,7 +9,9 @@
 [Flutter 앱] ──HTTPS──> [Nginx :443] ──HTTP(Docker 내부망)──> [FastAPI 서버 :8000] ──> [PostgreSQL]
                          TLS 종료                               에러 형식 통일          개발 DB + 테스트 DB
                          보안 헤더                               요청 로그
-                         요청 ID 부여                            /api/v1/health
+                         요청 ID 부여                            인증 (Google ID 토큰 검증)
+                                                                      │
+[Google 로그인 SDK] ── ID 토큰 ──> 앱 ──> 서버                         └──> Google 공개키(JWKS)
 ```
 
 | 폴더 | 내용 |
@@ -19,7 +21,7 @@
 | `infra/` | Docker Compose, Nginx 설정, 인증서 스크립트 |
 | `.github/` | CI 워크플로, PR 템플릿, Dependabot |
 
-현재 있는 API는 서버 상태 확인 `GET /api/v1/health` 하나다. 기능 API는 F1(인증)부터 추가된다.
+현재 있는 API: `GET /health`, 인증 `POST /auth/nonce` · `/auth/google/login` · `/auth/refresh` · `/auth/logout`, 내 정보 `GET·PATCH /me` (모두 `/api/v1` 아래).
 
 ## 2. 처음 한 번 설정
 
@@ -52,6 +54,19 @@ cp .env.example .env
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | DB 계정. 비밀번호는 URL에 들어가므로 영문·숫자만 |
 | `POSTGRES_HOST_PORT` | 내 컴퓨터에서 DB에 접속할 포트. 기본 55432 (다른 프로젝트의 5432와 충돌 방지) |
 | `LOG_LEVEL` | 서버 로그 레벨 |
+| `JWT_SECRET` | 자체 액세스 토큰 서명 키. 32자 이상 무작위: `openssl rand -base64 48` |
+| `GOOGLE_WEB_CLIENT_ID` | Google 웹 클라이언트 ID (ID 토큰의 aud). 공개값 |
+| `GOOGLE_ALLOWED_AZP` | 쉼표로 구분한 Google iOS·Android 클라이언트 ID (ID 토큰의 azp 검사). 공개값 |
+
+앱 설정은 `app/env/local.json`(iOS 시뮬레이터)·`app/env/local.android.json`(Android 에뮬레이터)에 있다. 공개값만 들어가므로 커밋한다.
+
+| `app/env/*.json` 항목 | 설명 |
+|---|---|
+| `API_BASE_URL` | 서버 주소 (HTTPS만) |
+| `GOOGLE_SERVER_CLIENT_ID` | Google 웹 클라이언트 ID. 앱이 이 값으로 ID 토큰을 요청한다 |
+| `GOOGLE_IOS_CLIENT_ID` | Google iOS 클라이언트 ID. **iOS에서 Google 로그인하려면 필요** (Android는 비워둠) |
+
+iOS Google 로그인은 `app/ios/Runner/Info.plist`의 URL scheme에 iOS 클라이언트 ID를 뒤집은 값(`com.googleusercontent.apps.<번호>-<문자열>`)도 등록돼 있어야 한다.
 
 > ⚠️ `.env`, `infra/nginx/certs/`, mkcert 루트 개인키(`$(mkcert -CAROOT)/rootCA-key.pem`)는 절대 커밋·공유하지 않는다. 기기에 설치하는 건 공개 인증서 `rootCA.pem`뿐이다.
 
@@ -117,7 +132,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 ### 4.1 서버
 
-테스트는 Compose의 PostgreSQL 안에 있는 `travel_copilot_test` DB를 쓴다 (서버 스택이 켜져 있어야 함).
+테스트는 Compose의 PostgreSQL 안에 있는 `travel_copilot_test` DB를 쓴다 (서버 스택이 켜져 있어야 함). 테스트 시작 시 이 DB를 비우고 마이그레이션을 적용하므로 개발 DB에는 영향이 없다. Google은 실제로 호출하지 않고 테스트가 만든 가짜 공개키로 대신한다.
 
 ```bash
 set -a; . ./.env; set +a
@@ -132,9 +147,9 @@ uv run pytest                # 테스트
 
 | 테스트 폴더 | 내용 |
 |---|---|
-| `tests/unit/` | 설정, 로그 형식 |
-| `tests/api/` | `/health`, 404·405 에러 형식, 요청 ID |
-| `tests/security/` | 500·422 응답에 내부 정보·입력값 없음, 문서 노출 범위, 비밀번호 미출력, 로그에 토큰 미기록 |
+| `tests/unit/` | 설정, 로그 형식, 요청 횟수 제한, Google 공개키 캐시 |
+| `tests/api/` | `/health`, 404·405 에러 형식, 요청 ID, 로그인·내 정보 API |
+| `tests/security/` | 500·422 응답에 내부 정보·입력값 없음, 문서 노출 범위, 비밀번호 미출력, 로그에 토큰 미기록, Google ID 토큰 위조·다른 앱용·알고리즘 바꿔치기·nonce 재사용, 리프레시 토큰 재사용 감지, 요청 횟수 제한 |
 
 ### 4.2 앱
 
@@ -181,9 +196,15 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | 8 | DB 외부 차단 | `docker port travel-copilot-postgres-1` | `127.0.0.1:55432`만 |
 | 9 | 서버 직접 접근 불가 | `docker port travel-copilot-server-1` | 출력 없음 |
 | 10 | 비밀값 커밋 차단 | `echo 'aws_access_key_id = AKIAQX7RZ4M2P9LK3TWE' > leak.txt && git add leak.txt && git commit -m test` | `gitleaks ... Failed`, 커밋 안 됨. 확인 후 `git reset leak.txt && rm leak.txt` |
-| 11 | 앱 정상 | iOS 시뮬레이터에서 앱 실행 | "서버 상태" 화면에 **정상** |
-| 12 | 앱 실패 표시 | `$C stop server` 후 앱에서 다시 시도 | **연결 실패** + 다시 시도 버튼. 확인 후 `$C start server` |
-| 13 | API 문서 범위 | 브라우저로 https://localhost/api/v1/docs | 로컬에서는 열림 (staging·production은 서버 테스트로 404 확인) |
+| 11 | 첫 실행 | iOS 시뮬레이터에서 앱 실행 (저장된 로그인 없음) | 로그인 화면 ("Google로 계속하기") |
+| 12 | API 문서 범위 | 브라우저로 https://localhost/api/v1/docs | 로컬에서는 열림 (staging·production은 서버 테스트로 404 확인) |
+| 13 | nonce 발급 | `curl --cacert "$CA" -X POST https://localhost/api/v1/auth/nonce` | `{"nonce":"...43자...","expires_in":300}` |
+| 14 | 가짜 ID 토큰 거절 | `curl --cacert "$CA" -X POST https://localhost/api/v1/auth/google/login -H 'content-type: application/json' -d '{"id_token":"aaa.bbb.ccc"}'` | `401`, `"code":"id_token_invalid"`, 실패 이유는 응답에 없음 (서버 로그에만 `reason`) |
+| 15 | 토큰 없는 요청 | `curl --cacert "$CA" -i https://localhost/api/v1/me` | `401`, `www-authenticate: Bearer`, `"code":"token_missing"` |
+| 16 | Google 로그인 | 앱에서 "Google로 계속하기" → 계정 선택 | 홈에 "○○님, 로그인되었습니다" (iOS 클라이언트 ID 필요) |
+| 17 | 로그인 유지 | 앱을 완전히 종료 후 다시 실행 | 로그인 화면 없이 바로 홈 |
+| 18 | 로그아웃 | 홈의 로그아웃 → DB에서 `SELECT revoked_at FROM refresh_tokens;` | 로그인 화면으로 이동, `revoked_at`에 시각 기록 |
+| 19 | 리프레시 토큰 재사용 감지 | 같은 리프레시 토큰으로 `POST /auth/refresh`를 두 번 | 두 번째 `401`, 그 로그인의 토큰 전부 `revoked_at` 기록, 서버 로그에 "리프레시 토큰 재사용 감지" |
 
 ## 6. 자주 겪는 문제
 
@@ -197,13 +218,18 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | pytest가 `TEST_DATABASE_URL 환경변수가 필요합니다`로 실패 | 환경변수 미설정 | 4.1의 `export` 두 줄 실행 |
 | 테스트 DB가 없다는 에러 | DB 볼륨이 테스트 DB 생성 스크립트 추가 전에 만들어짐 | `$C down -v` 후 다시 `up` (개발 DB 데이터도 지워짐) |
 | CI `생성 파일이 커밋되지 않았습니다` | 코드 생성 결과 미커밋 | 3.4 실행 후 생성 파일 커밋 |
+| 서버가 `JWT_SECRET` 관련 에러로 시작 안 됨 | `.env`에 값이 없거나 32자 미만 | `openssl rand -base64 48`로 만들어 `.env`에 추가 |
+| 앱 시작 시 `GOOGLE_SERVER_CLIENT_ID가 없습니다` | `env/*.json`에 값 없음 | 웹 클라이언트 ID 입력 |
+| iOS에서 Google 로그인 버튼을 누르면 앱이 종료되거나 설정 오류 | iOS 클라이언트 ID·URL scheme 미설정 | `env/local.json`의 `GOOGLE_IOS_CLIENT_ID`와 `Info.plist` URL scheme 확인 |
+| 로그인 시 `nonce_invalid` | nonce 5분 만료, 또는 같은 로그인 재시도 | 다시 로그인 (앱이 새 nonce를 받음) |
 | 커밋이 `gitleaks Failed`로 막힘 | 비밀값으로 보이는 문자열 포함 | 실제 비밀값이면 제거하고 `.env`로. 가짜 값이면 `.gitleaks.toml` 허용 목록 검토 |
 
 ## 7. 아직 안 된 것
 
 | 항목 | 시점 |
 |---|---|
-| Android 에뮬레이터 실행 확인 | Android Studio 설치 후 |
+| Android 에뮬레이터 실행 확인 (F0·F1) | 늦어도 F5 전에 Android Studio 설치 후 |
+| 카카오·Apple 로그인 | F10 |
 | 파일 저장소(S3 호환) | F7 (MinIO 공식 이미지 배포 중단, 대체 도구는 F7 명세에서 결정) |
 | 스테이징 서버 | 출시 준비 전 (외부 준비물 P6) |
 | Nginx ↔ 서버 구간 패킷 캡처 | 보안 로드맵 0단계 학습 과제 |

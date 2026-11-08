@@ -1,6 +1,6 @@
 # F1. 인증 — Google 로그인
 
-> 상태: 초안 (2026-11-08) — 승인 대기
+> 상태: 구현 완료, 보안 점검 대기 (2026-11-08)
 > 브랜치: `feat/auth`
 > 관련 문서: [../05-data-model.md](../05-data-model.md), [../06-api.md](../06-api.md) 3.1·3.2절, [../07-screens.md](../07-screens.md) S01·S02·S17
 > 관련 위협: T01, T02, T03, T04, T05, T18, T21, T25
@@ -32,13 +32,13 @@ Google 계정으로 로그인하고, 서버가 발급한 토큰으로 이후 모
 
 ## 3. 완료 조건
 
-- [ ] iOS 시뮬레이터에서 Google 로그인 → 임시 홈에 내 이름 표시
-- [ ] 앱을 껐다 켜면 로그인 상태 유지
-- [ ] 액세스 토큰 만료 후에도 사용자 개입 없이 자동 갱신
-- [ ] 로그아웃하면 서버의 리프레시 토큰이 폐기되고 기기 토큰이 지워짐
-- [ ] 8절 보안 테스트 전부 통과
-- [ ] 서버·앱 테스트, lint 통과, 실행 가이드(00) 갱신
-- [ ] Android 실행 확인은 범위 밖 (아래 4절)
+- [x] iOS 시뮬레이터에서 Google 로그인 → 임시 홈에 내 이름 표시
+- [x] 앱을 껐다 켜면 로그인 상태 유지
+- [x] 액세스 토큰 만료 후에도 사용자 개입 없이 자동 갱신
+- [x] 로그아웃하면 서버의 리프레시 토큰이 폐기되고 기기 토큰이 지워짐
+- [x] 8절 보안 테스트 전부 통과
+- [x] 서버·앱 테스트, lint 통과, 실행 가이드(00) 갱신
+- [x] ~~Android 실행 확인~~ → 범위 밖 (아래 4절)
 
 ## 4. 범위 밖
 
@@ -90,7 +90,8 @@ Google 계정으로 로그인하고, 서버가 발급한 토큰으로 이후 모
 
 ID 토큰 안에 nonce가 들어 있으므로, 로그인 요청 본문에는 nonce를 따로 보내지 않는다 (06-api 갱신).
 
-> 확인 필요: `google_sign_in` 7.x의 `initialize(nonce: ...)`가 iOS·Android 모두에서 ID 토큰의 `nonce`에 값을 그대로 넣는지 구현 중 확인한다. 안 되면 이 절을 고쳐서 다시 승인받는다.
+> ~~확인 필요: `google_sign_in` 7.x의 `initialize(nonce: ...)`가 iOS·Android 모두에서 ID 토큰의 `nonce`에 값을 그대로 넣는지~~
+> **확인 결과 (구현 중)**: iOS·Android 네이티브 SDK는 nonce를 로그인 요청마다 받아 ID 토큰에 넣는다. 다만 앱용 API `GoogleSignIn.instance.initialize()`는 앱 실행 중 **한 번만** 호출해야 해서, 로그인마다 새 nonce를 넣을 수 없다. 그래서 그 아래 플랫폼 계층(`GoogleSignInPlatform`)의 `init(nonce)` → `authenticate()`를 로그인 직전마다 직접 호출한다 (플랫폼 계층의 `init`은 설정 저장만 해서 반복 호출이 안전함). 패키지 내부 동작에 기대므로 `google_sign_in` 7.2.0, `google_sign_in_platform_interface` 3.1.0으로 **버전을 고정**하고, 코드는 `app/lib/features/auth/data/google_auth_client.dart` 한 곳에 모았다. 서버 쪽 동작은 바뀌지 않는다.
 
 ### 5.4 자체 토큰
 
