@@ -1,0 +1,36 @@
+# 설치: pre-commit install  (저장소 루트에서 한 번)
+# 전체 파일 검사: pre-commit run --all-files
+repos:
+  - repo: local
+    hooks:
+      # 비밀값 커밋 차단 (T24). 로컬에 설치된 gitleaks를 쓴다: brew install gitleaks
+      - id: gitleaks
+        name: gitleaks (비밀값 검사)
+        entry: gitleaks git --pre-commit --staged --redact --no-banner --config .gitleaks.toml
+        language: system
+        pass_filenames: false
+
+      - id: ruff-check
+        name: ruff (서버 lint)
+        entry: bash -c 'cd server && uv run ruff check --force-exclude "${@#server/}"' --
+        language: system
+        types: [python]
+        files: ^server/
+
+      - id: ruff-format
+        name: ruff (서버 포맷)
+        entry: bash -c 'cd server && uv run ruff format --check --force-exclude "${@#server/}"' --
+        language: system
+        types: [python]
+        files: ^server/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: \.(g|freezed)\.dart$
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-merge-conflict
+      - id: detect-private-key
