@@ -14,14 +14,14 @@
 이 작업의 사용자는 개발자(나)다.
 
 1. 저장소를 받고 README의 순서대로 도구 설치, 인증서 생성, `.env` 작성
-2. `docker compose up`으로 PostgreSQL·MinIO·서버·Nginx 실행
+2. `docker compose up`으로 PostgreSQL·서버·Nginx 실행
 3. `https://localhost/api/v1/health` 호출 → `{"status": "ok"}`
 4. iOS 시뮬레이터·Android 에뮬레이터에서 앱 실행 → 첫 화면에 서버 상태 "정상" 표시
 5. 브랜치에서 커밋하면 pre-commit이 비밀값·포맷 검사, PR을 올리면 CI가 lint·테스트·보안 검사
 
 ## 3. 완료 조건
 
-- [ ] `docker compose up` 한 번으로 4개 서비스가 정상 실행
+- [ ] `docker compose up` 한 번으로 3개 서비스(Nginx·서버·PostgreSQL)가 정상 실행
 - [ ] HTTPS(mkcert 인증서)로 `/api/v1/health` 응답, HTTP 요청은 HTTPS로 리다이렉트
 - [ ] 서버: ruff, mypy(strict), pytest 통과
 - [ ] 앱: `dart format`, `flutter analyze`, `flutter test` 통과
@@ -36,7 +36,7 @@
 |---|---|
 | DB 테이블 | 기능별로 추가 (F1부터) |
 | 인증, 요청 횟수 제한 | F1 |
-| MinIO 버킷·암호화 설정 | F7 (이번엔 컨테이너만 실행) |
+| 파일 저장소(S3 호환) | F7. ~~MinIO 컨테이너만 실행~~ → MinIO 공식 이미지 배포 중단으로 F0에서 제외, 대체 도구는 F7 명세에서 결정 |
 | 스테이징·운영 배포 | R, 로드맵 5단계 |
 | Semgrep, Trivy, ZAP | 로드맵 4단계에서 CI에 추가 |
 | 실기기(폰) 연결 | 실기기에 로컬 인증서를 설치해야 해서 번거로움. 필요해지면 그때 |
@@ -97,7 +97,7 @@ travel-copilot/
 |---|---|
 | 런타임 | Python 3.13 (uv가 설치), FastAPI, uvicorn |
 | 설정 (`core/config.py`) | pydantic-settings. 필수 값이 없으면 **시작 시 바로 실패**. 비밀값은 `SecretStr`로 감싸 로그·repr에 안 찍히게 |
-| 설정 항목 | `ENV`(local/staging/production), `DATABASE_URL`, `LOG_LEVEL`, `MINIO_*`(F7에서 사용) |
+| 설정 항목 | `ENV`(local/staging/production), `DATABASE_URL`, `LOG_LEVEL` (저장소 설정은 F7에서 추가) |
 | DB (`core/db.py`) | SQLAlchemy async 엔진 + asyncpg, 요청마다 세션을 주는 의존성 |
 | 에러 (`core/errors.py`) | 전역 핸들러 3종: 도메인 예외 → 해당 상태, 검증 실패 → 422, 그 외 → 500. 모두 RFC 9457 + `code` |
 | 422 응답 | 어느 필드가 왜 틀렸는지만. **입력값을 응답에 다시 담지 않는다** (Pydantic 기본 에러는 입력값을 포함하므로 걸러냄 — 토큰 등이 되돌아가는 것 방지) |
@@ -115,8 +115,8 @@ travel-copilot/
 |---|---|---|---|
 | nginx | `nginx` (버전 고정) | 80, 443 | TLS 종료, 80 → 443 리다이렉트 |
 | server | 로컬 빌드 | 없음 (Nginx만 접근) | |
-| postgres | `postgres:17` (버전 고정) | `127.0.0.1:5432` (로컬 개발 도구용) | 데이터는 볼륨에, 비밀번호는 `.env` |
-| minio | `minio/minio` (버전 고정) | `127.0.0.1:9001` (콘솔만) | 기본 계정(minioadmin) 사용 금지, `.env`에서 설정 |
+| postgres | `postgres:17-alpine` | `127.0.0.1:55432` (로컬 개발 도구·테스트용, `POSTGRES_HOST_PORT`로 변경 가능 — 다른 프로젝트의 5432와 충돌 방지) | 데이터는 볼륨에, 비밀번호는 `.env` |
+| ~~minio~~ | — | — | **제외**: MinIO 공식 Docker 이미지를 더 이상 받을 수 없음 (2026-11 확인). F7에서 대체 도구 결정 |
 
 - 외부 노출 포트는 **`127.0.0.1`로만** 묶는다 (같은 Wi-Fi의 다른 기기가 DB에 붙지 못하게)
 - 이미지 태그는 버전까지 고정. 해시(digest) 고정은 로드맵 4단계(Trivy)에서
@@ -197,7 +197,7 @@ travel-copilot/
 | T21 | 앱 `print` 금지(lint), 릴리스 빌드 콘솔 로그 없음 | `flutter analyze`, 로거 단위 테스트 |
 | T22 | 로컬도 HTTPS, 앱 평문 차단, 릴리스는 시스템 인증서만 | HTTP 요청이 리다이렉트되는지, 앱 설정 파일 검토 |
 | T28 | 잠금 파일 커밋, 의존성 취약점 검사, 액션 SHA 고정 | CI `security.yml` |
-| — | DB·MinIO 포트는 127.0.0.1에만 노출 | 다른 기기에서 접속 시도 → 실패 |
+| — | DB 포트는 127.0.0.1에만 노출 | 다른 기기에서 접속 시도 → 실패 |
 | — | 서버 컨테이너 root 미사용 | `docker compose exec server id` |
 
 ## 8. 테스트 계획

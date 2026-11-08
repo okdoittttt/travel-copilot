@@ -39,13 +39,13 @@
 **목표**: 만들기 전에 무엇을 지켜야 하는지 정하고, 안전한 개발 환경을 갖춘다.
 
 - [x] 위협 모델 초안 작성 (`security/threat-model.md`) — 자산 / 공격자 / 진입점 / 위협. 이후 단계마다 갱신
-- [ ] Docker Compose로 서버 + PostgreSQL + MinIO + Nginx 구성
-- [ ] 로컬 인증서(mkcert 등)로 Nginx에 TLS 적용
+- [x] Docker Compose로 서버 + PostgreSQL + Nginx 구성 (파일 저장소는 F7)
+- [x] 로컬 인증서(mkcert 등)로 Nginx에 TLS 적용
 - [ ] Wireshark로 TLS 적용 전/후 내 트래픽 비교 캡처 (로컬에서만)
 - [ ] Nginx ↔ 서버 내부 구간이 평문인지 확인하고, 운영에서 이게 문제가 되는 조건 정리
 - [ ] TLS 핸드셰이크, 인증서 체인 흐름을 내 말로 정리 (`security/notes/tls.md`)
-- [ ] 비밀값은 처음부터 코드 밖으로: `.env` + `.env.example`, `.gitignore` 확인
-- [ ] gitleaks를 pre-commit 훅으로 걸어 비밀값 커밋 차단
+- [x] 비밀값은 처음부터 코드 밖으로: `.env` + `.env.example`, `.gitignore` 확인
+- [x] gitleaks를 pre-commit 훅으로 걸어 비밀값 커밋 차단
 
 **결과물**: `security/threat-model.md`(초안), `security/notes/tls.md`, TLS 적용된 로컬 환경
 
@@ -150,7 +150,7 @@
 - [ ] Semgrep (정적 분석), Bandit (Python 보안 린터)
 - [ ] pip-audit (Python 의존성), osv-scanner (Dart/Flutter 의존성 포함)
 - [ ] Trivy (컨테이너 이미지·설정)
-- [ ] Dockerfile 점검: root가 아닌 사용자로 실행, 최소 베이스 이미지
+- [x] Dockerfile 점검: root가 아닌 사용자로 실행, 최소 베이스 이미지
 - [ ] OWASP ZAP baseline 스캔을 **로컬에서 띄운 내 서버에만** 실행
 - [ ] 경고마다 진짜 문제인지 오탐인지 판단하고 근거 기록 (`security/scan-triage.md`)
 

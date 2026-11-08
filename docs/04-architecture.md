@@ -31,7 +31,7 @@
 | Nginx | TLS 종료, 요청 크기 제한, 1차 요청 횟수 제한 |
 | FastAPI 서버 | 모든 비즈니스 로직과 권한 확인, 외부 API 대리 호출 |
 | PostgreSQL | 단일 진실 원천(source of truth) |
-| 오브젝트 스토리지 | 바우처 파일만 저장. 로컬은 MinIO, 운영은 S3 호환 서비스 |
+| 오브젝트 스토리지 | 바우처 파일만 저장. 로컬 도구는 F7에서 결정 (~~MinIO~~ 공식 이미지 배포 중단), 운영은 S3 호환 서비스 |
 
 ## 2. 저장소 구조
 
@@ -164,7 +164,7 @@ API 클라이언트는 직접 작성한다. 서버가 만드는 OpenAPI 명세�
 
 | 환경 | 구성 | 용도 |
 |---|---|---|
-| local | Docker Compose (서버, PostgreSQL, MinIO, Nginx + mkcert 인증서) | 개발, 공격 실습 |
+| local | Docker Compose (서버, PostgreSQL, Nginx + mkcert 인증서. 파일 저장소는 F7에서 추가) | 개발, 공격 실습 |
 | staging | 운영과 같은 구성, 별도 키·DB | 출시 전 확인, 점검 도구 실행 |
 | production | 5단계(배포·운영 보안)에서 호스팅 결정 | 실서비스 |
 

@@ -50,24 +50,24 @@
 ### F0. 기반 (1~2주)
 
 **서버·인프라**
-- [ ] `server/`: uv 프로젝트, FastAPI 앱, 설정(pydantic-settings), 전역 예외 핸들러(RFC 9457), JSON 로깅·request_id, `/health`
-- [ ] SQLAlchemy async 세션, Alembic 초기화
-- [ ] 테스트 기반: 실제 PostgreSQL 테스트 DB, httpx 클라이언트, respx
-- [ ] `infra/docker-compose.yml`: 서버, PostgreSQL, MinIO, Nginx
-- [ ] Nginx: mkcert 로컬 인증서로 TLS, 요청 크기 제한, 보안 헤더
-- [ ] `.env.example`, `.gitignore` 점검
+- [x] `server/`: uv 프로젝트, FastAPI 앱, 설정(pydantic-settings), 전역 예외 핸들러(RFC 9457), JSON 로깅·request_id, `/health`
+- [x] SQLAlchemy async 세션, Alembic 초기화
+- [x] 테스트 기반: 실제 PostgreSQL 테스트 DB, httpx 클라이언트, respx
+- [x] `infra/docker-compose.yml`: 서버, PostgreSQL, Nginx (파일 저장소는 F7)
+- [x] Nginx: mkcert 로컬 인증서로 TLS, 요청 크기 제한, 보안 헤더
+- [x] `.env.example`, `.gitignore` 점검
 
 **앱**
-- [ ] `app/`: Flutter 프로젝트, very_good_analysis, 폴더 구조(core/features)
-- [ ] Riverpod·go_router·dio·freezed·build_runner 설정, l10n(ARB) 설정
-- [ ] 앱 로거(print 금지 lint), 공통 에러 타입 뼈대
-- [ ] 환경 구분 (dev/staging/prod — API 주소)
-- [ ] 로컬 서버 연결 확인 (`/health` 호출)
+- [x] `app/`: Flutter 프로젝트, very_good_analysis, 폴더 구조(core/features)
+- [x] Riverpod·go_router·dio·freezed·build_runner 설정, l10n(ARB) 설정
+- [x] 앱 로거(print 금지 lint), 공통 에러 타입 뼈대
+- [x] 환경 구분 (dev/staging/prod — API 주소)
+- [x] 로컬 서버 연결 확인 (`/health` 호출) — iOS 시뮬레이터 확인 완료, Android는 SDK 설치 후 확인
 
 **저장소·CI**
-- [ ] gitleaks pre-commit 훅
-- [ ] GitHub Actions: `server.yml`, `app.yml`, `security.yml` (액션은 커밋 SHA로 고정, 최소 권한)
-- [ ] `.github/pull_request_template.md`
+- [x] gitleaks pre-commit 훅
+- [x] GitHub Actions: `server.yml`, `app.yml`, `security.yml` (액션은 커밋 SHA로 고정, 최소 권한)
+- [x] `.github/pull_request_template.md`
 
 **로드맵 연계**: 0단계 (TLS, 비밀값 관리, gitleaks), 4단계 일부 (CI)
 **완료 기준**: `docker compose up`으로 HTTPS `/health` 응답, 앱에서 호출 성공, CI 3종 통과
@@ -139,7 +139,7 @@
 ### F7. 바우처 — 서버·온라인 (10주)
 
 - [ ] 바우처 설계 확정 (명세에 포함): 서버 암호화 방식(스토리지 기본 vs 봉투 암호화), 다운로드 방식(서버 경유 vs 짧은 URL)
-- [ ] 테이블: vouchers, MinIO 비공개 버킷
+- [ ] 로컬 S3 호환 저장소 도구 결정 (MinIO 대체), 테이블: vouchers, 비공개 버킷
 - [ ] 업로드 (크기 → 시그니처 판별 → 암호화 → 저장), 다운로드 (권한 확인, 응답 헤더), 수정, 삭제
 - [ ] 멤버 내보내기·여행 삭제 시 바우처·파일 삭제, 파일 삭제 실패 재시도
 - [ ] 앱: S11 바우처 목록, S12 올리기·수정(공개 범위 기본 나만 보기, 공유 경고), S13 보기(온라인)
