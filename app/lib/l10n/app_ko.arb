@@ -1,0 +1,9 @@
+{
+  "@@locale": "ko",
+  "appTitle": "Travel Copilot",
+  "healthTitle": "서버 상태",
+  "healthChecking": "확인 중…",
+  "healthOk": "정상",
+  "healthFailed": "연결 실패",
+  "retry": "다시 시도"
+}

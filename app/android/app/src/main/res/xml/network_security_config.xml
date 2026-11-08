@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HTTPS만 허용하고 시스템 인증서만 신뢰한다 (T22). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- 디버그 빌드에서만: 에뮬레이터에 설치한 mkcert 루트 인증서(사용자 인증서)를 신뢰.
+         릴리스 빌드에는 적용되지 않는다. -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
