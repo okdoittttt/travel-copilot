@@ -8,17 +8,21 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from travel_copilot.core.config import get_settings
+import travel_copilot.auth.models
+import travel_copilot.users.models  # noqa: F401  # 테이블 등록용 import
+from travel_copilot.core.config import DatabaseSettings
 from travel_copilot.core.db import Base
 
 config = context.config
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # 테스트에서 마이그레이션을 돌릴 때 앱 로거가 꺼지지 않게 기존 로거를 유지한다
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-# DB 주소는 서버와 같은 설정(환경변수)에서 읽는다. alembic.ini에 비밀값을 두지 않기 위해서다.
-database_url = get_settings().database_url.get_secret_value()
+# DB 주소는 서버와 같은 설정(환경변수 DATABASE_URL)에서 읽는다. alembic.ini에 비밀값을 두지 않기
+# 위해서다. 마이그레이션에는 DB 설정만 필요하므로 다른 서버 설정(JWT 키 등)은 요구하지 않는다.
+database_url = DatabaseSettings().database_url.get_secret_value()  # type: ignore[call-arg]
 
-# 기능별 모델을 여기서 import해야 자동 생성이 테이블을 인식한다. (F1부터 추가)
+# 기능별 모델 모듈을 위에서 import해야 자동 생성이 테이블을 인식한다.
 target_metadata = Base.metadata
 
 

@@ -3,16 +3,24 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 
+from travel_copilot.auth.google import GoogleIdTokenVerifier, GoogleJwksCache
+from travel_copilot.auth.router import router as auth_router
 from travel_copilot.core.config import Settings, get_settings
 from travel_copilot.core.db import create_engine, create_sessionmaker
 from travel_copilot.core.errors import register_error_handlers
 from travel_copilot.core.logging import configure_logging
 from travel_copilot.core.middleware import RequestContextMiddleware
+from travel_copilot.core.rate_limit import SlidingWindowRateLimiter
 from travel_copilot.health.router import router as health_router
+from travel_copilot.users.router import router as users_router
 
 API_PREFIX = "/api/v1"
+
+# 외부 HTTP 호출 타임아웃 (08-conventions S5)
+HTTP_TIMEOUT = httpx.Timeout(10.0, connect=3.0)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -34,10 +42,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         engine = create_engine(settings)
         app.state.sessionmaker = create_sessionmaker(engine)
-        try:
-            yield
-        finally:
-            await engine.dispose()
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as http:
+            app.state.google_verifier = GoogleIdTokenVerifier(
+                GoogleJwksCache(http),
+                web_client_id=settings.google_web_client_id,
+                allowed_azp=settings.google_allowed_azp_set,
+            )
+            try:
+                yield
+            finally:
+                await engine.dispose()
 
     app = FastAPI(
         title="Travel Copilot API",
@@ -48,7 +62,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = settings
+    app.state.rate_limiter = SlidingWindowRateLimiter()
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
-    app.include_router(health_router, prefix=API_PREFIX)
+    for router in (health_router, auth_router, users_router):
+        app.include_router(router, prefix=API_PREFIX)
     return app
