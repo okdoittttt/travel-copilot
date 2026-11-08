@@ -63,14 +63,14 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
-| POST | `/auth/nonce` | 🌐 | 로그인용 nonce 발급 (짧게 만료, 1회용). 저장 방식은 인증 설계에서 확정 |
-| POST | `/auth/{provider}/login` | 🌐 | `provider` = `kakao` \| `apple` \| `google`. ID 토큰 + nonce → 토큰 발급. 처음이면 가입 |
+| POST | `/auth/nonce` | 🌐 | 로그인용 nonce 발급 (5분, 1회용, DB에 해시 저장 — features/auth.md 5.3) |
+| POST | `/auth/{provider}/login` | 🌐 | `provider` = `kakao` \| `apple` \| `google`. ID 토큰(안에 nonce 포함) → 토큰 발급. 처음이면 가입 |
 | POST | `/auth/refresh` | 🌐 | 리프레시 토큰 → 새 액세스·리프레시 토큰 (리프레시 토큰은 매번 교체) |
 | POST | `/auth/logout` | 👤 | 현재 리프레시 토큰 묶음 폐기 |
 
 ```json
 // POST /auth/apple/login
-{ "id_token": "eyJ...", "nonce": "n-0S6_WzA2Mj", "display_name": "홍길동" }
+{ "id_token": "eyJ...", "display_name": "홍길동" }   // nonce는 ID 토큰 안에 들어 있어 따로 보내지 않음 (features/auth.md 5.3)
 
 // 200
 {
