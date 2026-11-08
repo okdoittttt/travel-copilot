@@ -12,17 +12,18 @@
 ## 2. 1단계 — 전체 설계
 
 코드 작성 전에 아래 문서를 순서대로 작성하고, 문서마다 승인을 받는다.
+작업은 `docs/design` 브랜치 하나에서 하고, 6개 문서가 모두 끝나면 PR 하나로 올린다.
 
 | 순서 | 문서 | 내용 |
 |---|---|---|
-| 1 | `docs/architecture.md` | 구성 요소, 저장소 구조(`app/` Flutter + `server/` FastAPI), 통신 방식, 오프라인 동작 원칙 |
-| 2 | `docs/data-model.md` | 테이블·관계, 역할별 권한표 |
-| 3 | `docs/api.md` | 엔드포인트, 요청·응답, 공통 에러 형식, API별 필요 권한 |
-| 4 | `docs/screens.md` | 화면 목록, 이동 흐름, 화면별 오프라인 동작 |
-| 5 | `docs/conventions.md` | 코드 스타일, 구조, git, 테스트, 보안 규칙, 완료 기준 |
-| 6 | `docs/tasks.md` | 기능 단위 작업 목록과 순서 |
+| 1 | `docs/04-architecture.md` | 구성 요소, 저장소 구조(`app/` Flutter + `server/` FastAPI), 통신 방식, 오프라인 동작 원칙 |
+| 2 | `docs/05-data-model.md` | 테이블·관계, 역할별 권한표 |
+| 3 | `docs/06-api.md` | 엔드포인트, 요청·응답, 공통 에러 형식, API별 필요 권한 |
+| 4 | `docs/07-screens.md` | 화면 목록, 이동 흐름, 화면별 오프라인 동작 |
+| 5 | `docs/08-conventions.md` | 코드 스타일, 구조, git, 테스트, 보안 규칙, 완료 기준 |
+| 6 | `docs/09-tasks.md` | 기능 단위 작업 목록과 순서 |
 
-## 3. 작업 순서 (초안 — tasks.md에서 확정)
+## 3. 작업 순서 (초안 — 09-tasks.md에서 확정)
 
 0. 기반: 저장소 구조, Docker Compose, 린터, CI, gitleaks
 1. 인증: 소셜 로그인, 토큰 발급·갱신·폐기
