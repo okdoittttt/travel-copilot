@@ -8,15 +8,15 @@ part of 'api_client.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 서버 API용 dio. 토큰 첨부·자동 갱신 인터셉터는 F1에서 추가한다.
+/// 서버 API용 dio. 액세스 토큰 첨부와 자동 갱신을 한다.
 
 @ProviderFor(apiClient)
 final apiClientProvider = ApiClientProvider._();
 
-/// 서버 API용 dio. 토큰 첨부·자동 갱신 인터셉터는 F1에서 추가한다.
+/// 서버 API용 dio. 액세스 토큰 첨부와 자동 갱신을 한다.
 
 final class ApiClientProvider extends $FunctionalProvider<Dio, Dio, Dio> with $Provider<Dio> {
-  /// 서버 API용 dio. 토큰 첨부·자동 갱신 인터셉터는 F1에서 추가한다.
+  /// 서버 API용 dio. 액세스 토큰 첨부와 자동 갱신을 한다.
   ApiClientProvider._()
     : super(
         from: null,
@@ -46,4 +46,4 @@ final class ApiClientProvider extends $FunctionalProvider<Dio, Dio, Dio> with $P
   }
 }
 
-String _$apiClientHash() => r'f86269ef11f043e83b56f0280a6ef5abcf81e9c7';
+String _$apiClientHash() => r'932356fc898a53bbe81b1ef6124f10e98c4df2d6';

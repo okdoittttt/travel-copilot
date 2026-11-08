@@ -13,17 +13,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appTitle => 'Travel Copilot';
 
   @override
-  String get healthTitle => '서버 상태';
+  String get loginSubtitle => 'AI와 함께 계획하고, 오프라인에서도 든든하게';
 
   @override
-  String get healthChecking => '확인 중…';
+  String get loginWithGoogle => 'Google로 계속하기';
 
   @override
-  String get healthOk => '정상';
+  String get loginFailed => '로그인하지 못했습니다. 다시 시도해주세요.';
 
   @override
-  String get healthFailed => '연결 실패';
+  String get loginPrivacyNotice => '계속하면 이용약관과 개인정보 처리방침에 동의하게 됩니다.';
 
   @override
-  String get retry => '다시 시도';
+  String homeGreeting(String name) {
+    return '$name님, 로그인되었습니다';
+  }
+
+  @override
+  String get homeComingSoon => '여행 목록은 곧 추가됩니다.';
+
+  @override
+  String get logout => '로그아웃';
 }

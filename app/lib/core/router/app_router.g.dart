@@ -8,16 +8,12 @@ part of 'app_router.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 앱 라우터. F1에서 시작·로그인 화면으로 바꾼다.
 
 @ProviderFor(appRouter)
 final appRouterProvider = AppRouterProvider._();
 
-/// 앱 라우터. F1에서 시작·로그인 화면으로 바꾼다.
-
 final class AppRouterProvider extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
     with $Provider<GoRouter> {
-  /// 앱 라우터. F1에서 시작·로그인 화면으로 바꾼다.
   AppRouterProvider._()
     : super(
         from: null,
@@ -47,4 +43,4 @@ final class AppRouterProvider extends $FunctionalProvider<GoRouter, GoRouter, Go
   }
 }
 
-String _$appRouterHash() => r'40e435afd5ac458b9e9a30018942501672e94c97';
+String _$appRouterHash() => r'26493e886ae1dd7d1d23a05b2f294ddd93764c53';
