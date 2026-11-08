@@ -98,35 +98,47 @@ abstract class AppLocalizations {
   /// **'Travel Copilot'**
   String get appTitle;
 
-  /// No description provided for @healthTitle.
+  /// No description provided for @loginSubtitle.
   ///
   /// In ko, this message translates to:
-  /// **'서버 상태'**
-  String get healthTitle;
+  /// **'AI와 함께 계획하고, 오프라인에서도 든든하게'**
+  String get loginSubtitle;
 
-  /// No description provided for @healthChecking.
+  /// No description provided for @loginWithGoogle.
   ///
   /// In ko, this message translates to:
-  /// **'확인 중…'**
-  String get healthChecking;
+  /// **'Google로 계속하기'**
+  String get loginWithGoogle;
 
-  /// No description provided for @healthOk.
+  /// No description provided for @loginFailed.
   ///
   /// In ko, this message translates to:
-  /// **'정상'**
-  String get healthOk;
+  /// **'로그인하지 못했습니다. 다시 시도해주세요.'**
+  String get loginFailed;
 
-  /// No description provided for @healthFailed.
+  /// No description provided for @loginPrivacyNotice.
   ///
   /// In ko, this message translates to:
-  /// **'연결 실패'**
-  String get healthFailed;
+  /// **'계속하면 이용약관과 개인정보 처리방침에 동의하게 됩니다.'**
+  String get loginPrivacyNotice;
 
-  /// No description provided for @retry.
+  /// No description provided for @homeGreeting.
   ///
   /// In ko, this message translates to:
-  /// **'다시 시도'**
-  String get retry;
+  /// **'{name}님, 로그인되었습니다'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeComingSoon.
+  ///
+  /// In ko, this message translates to:
+  /// **'여행 목록은 곧 추가됩니다.'**
+  String get homeComingSoon;
+
+  /// No description provided for @logout.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그아웃'**
+  String get logout;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

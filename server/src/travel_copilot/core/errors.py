@@ -52,6 +52,57 @@ class AppError(Exception):
             self.detail = detail
         super().__init__(self.detail)
 
+    @property
+    def headers(self) -> dict[str, str]:
+        """응답에 더할 헤더. 하위 클래스가 필요할 때 덮어쓴다."""
+        return {}
+
+
+class Unauthorized(AppError):
+    """인증 실패의 베이스. 응답에 `WWW-Authenticate` 헤더를 붙인다."""
+
+    status = 401
+    code = "token_invalid"
+    title = "Unauthorized"
+    detail = "인증이 필요합니다."
+
+    @property
+    def headers(self) -> dict[str, str]:
+        """Bearer 인증이 필요하다고 알린다."""
+        return {"WWW-Authenticate": "Bearer"}
+
+
+class RateLimited(AppError):
+    """요청 횟수 제한을 넘었을 때."""
+
+    status = 429
+    code = "rate_limited"
+    title = "Too Many Requests"
+    detail = "잠시 후 다시 시도해주세요."
+
+    def __init__(self, retry_after_seconds: int) -> None:
+        """예외를 만든다.
+
+        Args:
+            retry_after_seconds: 다시 시도할 수 있을 때까지 남은 초.
+        """
+        super().__init__()
+        self.retry_after_seconds = max(1, retry_after_seconds)
+
+    @property
+    def headers(self) -> dict[str, str]:
+        """언제 다시 시도할 수 있는지 알린다."""
+        return {"Retry-After": str(self.retry_after_seconds)}
+
+
+class UpstreamError(AppError):
+    """Google 등 외부 서비스 호출이 실패했을 때."""
+
+    status = 502
+    code = "upstream_error"
+    title = "Bad Gateway"
+    detail = "외부 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해주세요."
+
 
 class ServiceUnavailable(AppError):
     """DB 등 필수 구성 요소를 쓸 수 없을 때."""
@@ -68,6 +119,7 @@ def problem_response(
     title: str,
     detail: str,
     extra: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     """RFC 9457 형식 에러 응답을 만든다.
 
@@ -77,6 +129,7 @@ def problem_response(
         title: 상태를 짧게 설명하는 영문 제목.
         detail: 사용자에게 보여도 되는 설명.
         extra: 본문에 더할 필드 (예: 검증 실패 목록).
+        headers: 응답에 더할 헤더 (예: Retry-After).
 
     Returns:
         `application/problem+json` 응답.
@@ -90,12 +143,12 @@ def problem_response(
     }
     if extra:
         body.update(extra)
-    return JSONResponse(status_code=status, content=body, media_type=PROBLEM_JSON)
+    return JSONResponse(status_code=status, content=body, media_type=PROBLEM_JSON, headers=headers)
 
 
 async def _handle_app_error(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)  # noqa: S101  # 등록 시 타입으로 보장됨
-    return problem_response(exc.status, exc.code, exc.title, exc.detail)
+    return problem_response(exc.status, exc.code, exc.title, exc.detail, headers=exc.headers)
 
 
 async def _handle_validation_error(_: Request, exc: Exception) -> JSONResponse:

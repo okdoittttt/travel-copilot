@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # 서버 API는 snake_case (06-api 1절)
+          field_rename: snake

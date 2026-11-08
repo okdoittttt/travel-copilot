@@ -1,3 +1,5 @@
 {
-  "API_BASE_URL": "https://localhost/api/v1"
+  "API_BASE_URL": "https://localhost/api/v1",
+  "GOOGLE_SERVER_CLIENT_ID": "123992552687-uef3jdm8amhgf9281upv227p3a5mqa5k.apps.googleusercontent.com",
+  "GOOGLE_IOS_CLIENT_ID": "123992552687-7afke23oe10usl9rj2ckdoupa7p826b9.apps.googleusercontent.com"
 }
