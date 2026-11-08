@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# 비밀값·인증서 (절대 커밋하지 않기)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 패킷 캡처 (내 트래픽이 들어 있음)
+*.pcap
+*.pcapng
+
+# 기타
+.DS_Store
+.vscode/
+.idea/
