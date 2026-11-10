@@ -12,7 +12,11 @@ sealed class AppException implements Exception {
     }
     final data = response.data;
     final code = data is Map<String, dynamic> ? data['code'] as String? : null;
-    return ServerException(statusCode: response.statusCode ?? 0, code: code ?? 'unknown');
+    return ServerException(
+      statusCode: response.statusCode ?? 0,
+      code: code ?? 'unknown',
+      body: data is Map<String, dynamic> ? data : const {},
+    );
   }
 }
 
@@ -23,8 +27,11 @@ final class NetworkException extends AppException {
 
 /// 서버가 에러 응답을 보냄. [code]는 서버의 RFC 9457 응답의 `code` 값.
 final class ServerException extends AppException {
-  const new({required this.statusCode, required this.code});
+  const new({required this.statusCode, required this.code, this.body = const {}});
 
   final int statusCode;
   final String code;
+
+  /// 응답 본문 전체. `409 version_conflict`의 `current`처럼 추가 필드를 꺼낼 때 쓴다.
+  final Map<String, dynamic> body;
 }

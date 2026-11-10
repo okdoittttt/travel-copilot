@@ -9,7 +9,7 @@ void main() {
   test('로그인 상태 확인 중에는 시작 화면', () {
     const loading = AsyncLoading<AppUser?>();
 
-    expect(redirectFor(loading, Routes.home), Routes.splash);
+    expect(redirectFor(loading, Routes.trips), Routes.splash);
     expect(redirectFor(loading, Routes.splash), isNull);
   });
 
@@ -17,15 +17,15 @@ void main() {
     const signedOut = AsyncData<AppUser?>(null);
 
     expect(redirectFor(signedOut, Routes.splash), Routes.login);
-    expect(redirectFor(signedOut, Routes.home), Routes.login);
+    expect(redirectFor(signedOut, Routes.trips), Routes.login);
     expect(redirectFor(signedOut, Routes.login), isNull);
   });
 
-  test('로그인됨이면 시작·로그인 화면에서 홈으로', () {
+  test('로그인됨이면 시작·로그인 화면에서 여행 목록으로', () {
     const signedIn = AsyncData<AppUser?>(user);
 
-    expect(redirectFor(signedIn, Routes.splash), Routes.home);
-    expect(redirectFor(signedIn, Routes.login), Routes.home);
-    expect(redirectFor(signedIn, Routes.home), isNull);
+    expect(redirectFor(signedIn, Routes.splash), Routes.trips);
+    expect(redirectFor(signedIn, Routes.login), Routes.trips);
+    expect(redirectFor(signedIn, Routes.trips), isNull);
   });
 }
