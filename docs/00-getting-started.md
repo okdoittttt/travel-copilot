@@ -1,7 +1,7 @@
 # 실행 가이드
 
 > 로컬에서 Travel Copilot을 설정하고, 실행하고, 동작을 확인하는 방법.
-> 기준: F1(Google 로그인) 구현 시점 (2026-11-08). 기능이 추가될 때마다 이 문서를 갱신한다.
+> 기준: F2(여행·멤버) 구현 시점 (2026-11-08). 기능이 추가될 때마다 이 문서를 갱신한다.
 
 ## 1. 구성 한눈에 보기
 
@@ -201,10 +201,42 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | 13 | nonce 발급 | `curl --cacert "$CA" -X POST https://localhost/api/v1/auth/nonce` | `{"nonce":"...43자...","expires_in":300}` |
 | 14 | 가짜 ID 토큰 거절 | `curl --cacert "$CA" -X POST https://localhost/api/v1/auth/google/login -H 'content-type: application/json' -d '{"id_token":"aaa.bbb.ccc"}'` | `401`, `"code":"id_token_invalid"`, 실패 이유는 응답에 없음 (서버 로그에만 `reason`) |
 | 15 | 토큰 없는 요청 | `curl --cacert "$CA" -i https://localhost/api/v1/me` | `401`, `www-authenticate: Bearer`, `"code":"token_missing"` |
-| 16 | Google 로그인 | 앱에서 "Google로 계속하기" → 계정 선택 | 홈에 "○○님, 로그인되었습니다" (iOS 클라이언트 ID 필요) |
-| 17 | 로그인 유지 | 앱을 완전히 종료 후 다시 실행 | 로그인 화면 없이 바로 홈 |
-| 18 | 로그아웃 | 홈의 로그아웃 → DB에서 `SELECT revoked_at FROM refresh_tokens;` | 로그인 화면으로 이동, `revoked_at`에 시각 기록 |
+| 16 | Google 로그인 | 앱에서 "Google로 계속하기" → 계정 선택 | "내 여행" 목록 화면 (iOS 클라이언트 ID 필요) |
+| 17 | 로그인 유지 | 앱을 완전히 종료 후 다시 실행 | 로그인 화면 없이 바로 "내 여행" |
+| 18 | 로그아웃 | "내 여행" 오른쪽 위 로그아웃 → DB에서 `SELECT revoked_at FROM refresh_tokens;` | 로그인 화면으로 이동, `revoked_at`에 시각 기록 |
 | 19 | 리프레시 토큰 재사용 감지 | 같은 리프레시 토큰으로 `POST /auth/refresh`를 두 번 | 두 번째 `401`, 그 로그인의 토큰 전부 `revoked_at` 기록, 서버 로그에 "리프레시 토큰 재사용 감지" |
+| 20 | 여행 만들기 | 앱에서 "여행 만들기" → 제목·목적지·기간·시간대 입력 → 저장 | 여행 상세 화면, 내 역할 "소유자". 뒤로 가면 목록의 "다가오는 여행"에 표시 |
+| 21 | 입력 검사 | 빈 칸으로 저장, 기간 61일 이상 선택 | 항목마다 안내 문구, 서버 요청 없음 |
+| 22 | 여행 수정 | 상세 메뉴 → 여행 수정 → 제목 변경 → 저장 | 상세·목록에 새 제목 |
+| 23 | 동시 수정 (409) | 수정 화면을 열어 둔 채, 아래 5.1의 curl로 같은 여행 제목을 먼저 바꾼 뒤 앱에서 저장 | "다른 멤버가 먼저 수정했습니다" + 최신 내용. [내 수정 다시 적용]이면 내 값으로 저장, [취소]면 최신 내용 유지 |
+| 24 | 멤버 관리 | 아래 5.1로 가짜 멤버 추가 → 상세의 멤버 탭 당겨서 새로고침 → 멤버 메뉴 | 역할 변경·내보내기(확인 대화상자)·소유권 넘기기 동작 |
+| 25 | 소유권 넘긴 뒤 | 가짜 멤버에게 소유권 넘기기 | 내 역할 "편집자", 메뉴에 "여행 삭제" 없음·"여행 나가기" 있음. 나가면 목록에서 사라짐 |
+| 26 | 여행 삭제 | 소유자로 메뉴 → 여행 삭제 → 제목 다시 입력 | 제목이 같아야 삭제 버튼 활성화, 삭제 후 목록으로 |
+| 27 | 남의 여행 접근 | `curl --cacert "$CA" -H "Authorization: Bearer $TOKEN" https://localhost/api/v1/trips/$(uuidgen)` | `404`, `"code":"not_found"` (멤버가 아닌 여행도 같은 응답) |
+
+### 5.1 수동 확인 도우미 (로컬 전용)
+
+초대 기능(F5) 전까지는 두 번째 사용자를 SQL로 만든다. **로컬 개발 DB에서만** 쓴다.
+
+```bash
+set -a; . ./.env; set +a
+PSQL="docker compose --env-file .env -f infra/docker-compose.yml exec -T postgres psql -U $POSTGRES_USER -d ${POSTGRES_DB:-travel_copilot}"
+
+# 가짜 사용자를 만들어 내가 가장 최근에 만든 여행에 편집자로 넣기
+$PSQL -c "
+WITH u AS (INSERT INTO users (id, display_name, created_at, updated_at)
+           VALUES (gen_random_uuid(), '가짜 친구', now(), now()) RETURNING id),
+     t AS (SELECT id FROM trips ORDER BY created_at DESC LIMIT 1)
+INSERT INTO trip_members (trip_id, user_id, role) SELECT t.id, u.id, 'editor' FROM t, u;"
+
+# curl용 액세스 토큰 (내 계정, 15분). 409 확인 등에 쓴다
+MY_ID=$($PSQL -tAc "SELECT id FROM users ORDER BY created_at LIMIT 1")
+TOKEN=$(cd server && uv run python -c "import sys,uuid; from travel_copilot.auth.access_token import create_access_token as c; print(c(uuid.UUID(sys.argv[1]), sys.argv[2], 900))" "$MY_ID" "$JWT_SECRET")
+
+# 여행 제목 먼저 바꾸기 (#23). TRIP_ID와 VERSION은 GET /trips 응답에서
+curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"version": VERSION, "title": "다른 사람이 바꾼 제목"}' https://localhost/api/v1/trips/TRIP_ID
+```
 
 ## 6. 자주 겪는 문제
 
@@ -212,6 +244,7 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 |---|---|---|
 | `Bind for 0.0.0.0:5432 failed: port is already allocated` | 다른 프로젝트가 포트 사용 | `.env`의 `POSTGRES_HOST_PORT`를 다른 값으로 |
 | `80`/`443` 포트 충돌 | 다른 웹 서버 실행 중 | 해당 프로세스 종료 (`lsof -nP -iTCP:443 -sTCP:LISTEN`) |
+| `nginx.conf`를 고쳤는데 반영 안 됨 / `nginx -t`가 파일 없음 | 편집기가 파일을 새로 만들어 단일 파일 마운트가 옛 파일을 가리킴 | `docker compose --env-file .env -f infra/docker-compose.yml up -d --force-recreate nginx` |
 | curl `SSL certificate problem` | 로컬 인증서를 믿지 않음 | `--cacert "$(mkcert -CAROOT)/rootCA.pem"` 붙이거나 `mkcert -install` |
 | 앱이 "연결 실패" (서버는 정상) | 시뮬레이터·에뮬레이터에 루트 인증서 미설치 | 3.2·3.3의 인증서 설치 단계 |
 | 앱 시작 시 `API_BASE_URL이 없거나 HTTPS가 아닙니다` | `--dart-define-from-file` 빠짐 | `flutter run --dart-define-from-file=env/local.json` |

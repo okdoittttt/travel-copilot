@@ -100,7 +100,7 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 | POST | `/trips` | 👤 | 여행 만들기. 만든 사람이 owner |
 | GET | `/trips/{trip_id}` | O E V | **여행 스냅샷**: 여행 정보 + 내 역할 + 멤버 + 전체 일정 항목 + 내가 볼 수 있는 바우처 목록. 새로고침·오프라인 캐시용 |
 | PATCH | `/trips/{trip_id}` | O E | 제목·목적지·기간·시간대 수정 (`version` 필수). 기간을 줄여 밖으로 밀려나는 일정 항목이 있으면 `409` |
-| DELETE | `/trips/{trip_id}` | O | 여행 삭제 (바우처 파일 포함) |
+| DELETE | `/trips/{trip_id}?version=N` | O | 여행 삭제 (바우처 파일 포함). `version`은 본문 대신 쿼리로 |
 
 **스냅샷 응답의 Google 데이터**
 - 일정 항목에는 `place_id`, 좌표, 사용자가 쓴 제목·메모만 들어간다. 장소 이름·주소·이동시간은 없다
