@@ -1,8 +1,10 @@
 import asyncio
 import os
 import time
+import uuid
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -18,9 +20,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from travel_copilot.auth.access_token import create_access_token
 from travel_copilot.auth.google import GOOGLE_JWKS_URL
 from travel_copilot.core.config import Settings
 from travel_copilot.main import create_app
+from travel_copilot.trips.models import TripMember, TripRole
+from travel_copilot.users.models import User
 
 SERVER_DIR = Path(__file__).resolve().parent.parent
 
@@ -95,7 +100,7 @@ async def db(migrated_database_url: str) -> AsyncIterator[AsyncSession]:
     """테스트가 DB를 직접 확인할 때 쓰는 세션. 테스트 시작 전에 모든 데이터를 지운다."""
     engine = create_async_engine(migrated_database_url)
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE users, auth_nonces RESTART IDENTITY CASCADE"))
+        await conn.execute(text("TRUNCATE users, auth_nonces, trips RESTART IDENTITY CASCADE"))
     async with async_sessionmaker(engine, expire_on_commit=False)() as session:
         yield session
     await engine.dispose()
@@ -184,3 +189,50 @@ async def google_login(
 
 def bearer(access_token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {access_token}"}
+
+
+# --- 사용자·여행 도우미 ------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SeededUser:
+    id: uuid.UUID
+    display_name: str
+    headers: dict[str, str]
+
+
+async def create_user(db: AsyncSession, display_name: str = "여행자") -> SeededUser:
+    """Google 로그인을 거치지 않고 사용자와 액세스 토큰을 만든다.
+
+    로그인 API는 IP 기준 요청 횟수 제한이 있어, 여러 사용자가 필요한 테스트는 이 도우미를 쓴다.
+    """
+    user = User(display_name=display_name, email=f"{uuid.uuid4().hex}@example.com")
+    db.add(user)
+    await db.commit()
+    token = create_access_token(user.id, TEST_JWT_SECRET, ttl_seconds=900)
+    return SeededUser(id=user.id, display_name=display_name, headers=bearer(token))
+
+
+async def add_member(db: AsyncSession, trip_id: str, user: SeededUser, role: TripRole) -> None:
+    """여행에 멤버를 바로 넣는다 (초대 기능은 F5)."""
+    db.add(TripMember(trip_id=uuid.UUID(trip_id), user_id=user.id, role=role))
+    await db.commit()
+
+
+TRIP_BODY: dict[str, Any] = {
+    "title": "파리 가족여행",
+    "destination": "프랑스 파리",
+    "start_date": "2026-12-20",
+    "end_date": "2026-12-27",
+    "timezone": "Europe/Paris",
+}
+
+
+async def create_trip(client: AsyncClient, owner: SeededUser, **overrides: Any) -> dict[str, Any]:
+    """API로 여행을 만들고 응답 본문을 돌려준다."""
+    response = await client.post(
+        "/api/v1/trips", json={**TRIP_BODY, **overrides}, headers=owner.headers
+    )
+    assert response.status_code == 201, response.text
+    trip: dict[str, Any] = response.json()
+    return trip

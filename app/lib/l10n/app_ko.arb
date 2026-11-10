@@ -5,14 +5,111 @@
   "loginWithGoogle": "Google로 계속하기",
   "loginFailed": "로그인하지 못했습니다. 다시 시도해주세요.",
   "loginPrivacyNotice": "계속하면 이용약관과 개인정보 처리방침에 동의하게 됩니다.",
-  "homeGreeting": "{name}님, 로그인되었습니다",
-  "@homeGreeting": {
+  "logout": "로그아웃",
+  "tripsTitle": "내 여행",
+  "tripsUpcoming": "다가오는 여행",
+  "tripsPast": "지난 여행",
+  "tripsEmpty": "아직 여행이 없어요.\n첫 여행을 만들어보세요.",
+  "tripsLoadFailed": "여행을 불러오지 못했습니다.",
+  "retry": "다시 시도",
+  "tripCreate": "여행 만들기",
+  "tripEdit": "여행 수정",
+  "tripDelete": "여행 삭제",
+  "tripLeave": "여행 나가기",
+  "save": "저장",
+  "cancel": "취소",
+  "confirm": "확인",
+  "roleOwner": "소유자",
+  "roleEditor": "편집자",
+  "roleViewer": "보기 전용",
+  "memberCount": "멤버 {count}명",
+  "@memberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fieldTitle": "여행 제목",
+  "fieldDestination": "목적지",
+  "fieldPeriod": "여행 기간",
+  "fieldTimezone": "여행지 시간대",
+  "fieldPeriodHint": "날짜를 골라주세요",
+  "fieldTimezoneHint": "시간대를 골라주세요",
+  "timezoneSearch": "도시나 지역 이름으로 검색 (예: Paris)",
+  "errorRequired": "입력해주세요",
+  "errorTooLong": "100자 이하로 입력해주세요",
+  "errorInvalidChars": "줄바꿈 같은 특수 문자는 쓸 수 없어요",
+  "errorPeriodRequired": "기간을 골라주세요",
+  "errorPeriodTooLong": "여행 기간은 최대 60일이에요",
+  "errorTimezoneRequired": "시간대를 골라주세요",
+  "errorForbidden": "권한이 없습니다.",
+  "errorTripGone": "접근할 수 없는 여행입니다.",
+  "errorNotSaved": "저장되지 않았습니다. 연결을 확인하고 다시 시도해주세요.",
+  "errorGeneric": "처리하지 못했습니다. 다시 시도해주세요.",
+  "conflictTitle": "다른 멤버가 먼저 수정했습니다",
+  "conflictBody": "지금 저장된 내용:\n{summary}\n\n내 수정을 다시 적용할까요?",
+  "@conflictBody": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "conflictReapply": "내 수정 다시 적용",
+  "tabItinerary": "일정",
+  "tabVouchers": "바우처",
+  "tabMembers": "멤버",
+  "itineraryComingSoon": "일정은 곧 추가됩니다.",
+  "vouchersComingSoon": "바우처는 곧 추가됩니다.",
+  "deleteTitle": "여행을 삭제할까요?",
+  "deleteBody": "멤버 모두에게서 이 여행이 사라지고 되돌릴 수 없어요. 확인을 위해 여행 제목 \"{title}\"을 입력해주세요.",
+  "@deleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveTitle": "여행에서 나갈까요?",
+  "leaveBody": "다시 참여하려면 소유자에게 초대를 받아야 해요.",
+  "me": "나",
+  "joinedAt": "{date} 참여",
+  "@joinedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "memberMakeEditor": "편집자로 바꾸기",
+  "memberMakeViewer": "보기 전용으로 바꾸기",
+  "memberTransfer": "소유권 넘기기",
+  "memberRemove": "내보내기",
+  "transferTitle": "{name}님에게 소유권을 넘길까요?",
+  "@transferTitle": {
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
   },
-  "homeComingSoon": "여행 목록은 곧 추가됩니다.",
-  "logout": "로그아웃"
+  "transferBody": "넘기면 나는 편집자가 되고, 여행 삭제와 멤버 관리는 {name}님만 할 수 있어요.",
+  "@transferBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeTitle": "{name}님을 내보낼까요?",
+  "@removeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeBody": "이 멤버가 올린 바우처도 함께 삭제됩니다.",
+  "ownerMemberNotice": "내보낸 멤버의 기기에 남아 있던 여행 정보는 그 기기가 다음에 동기화할 때 지워져요."
 }

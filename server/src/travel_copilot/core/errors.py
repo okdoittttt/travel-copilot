@@ -57,6 +57,76 @@ class AppError(Exception):
         """응답에 더할 헤더. 하위 클래스가 필요할 때 덮어쓴다."""
         return {}
 
+    @property
+    def extra(self) -> dict[str, Any]:
+        """응답 본문에 더할 필드. 하위 클래스가 필요할 때 덮어쓴다."""
+        return {}
+
+
+class InvalidInput(AppError):
+    """스키마 검증을 통과했지만 다른 값과 함께 봤을 때 맞지 않는 입력.
+
+    Pydantic 검증 실패와 같은 422 `validation_error`로 응답한다.
+    """
+
+    status = 422
+    code = "validation_error"
+    title = "Unprocessable Content"
+    detail = "입력값을 확인해주세요."
+
+
+class NotFound(AppError):
+    """리소스가 없거나, 요청자가 볼 권한이 없을 때.
+
+    비멤버에게도 이 예외를 쓴다. 두 경우의 응답이 같아야 리소스가 있는지조차
+    알려주지 않을 수 있다 (06-api 2절, T06).
+    """
+
+    status = 404
+    code = "not_found"
+    title = "Not Found"
+    detail = "찾을 수 없습니다."
+
+
+class Forbidden(AppError):
+    """멤버지만 역할이 부족할 때."""
+
+    status = 403
+    code = "forbidden"
+    title = "Forbidden"
+    detail = "권한이 없습니다."
+
+
+class Conflict(AppError):
+    """현재 상태와 맞지 않는 요청. 하위 클래스가 code를 정한다."""
+
+    status = 409
+    code = "conflict"
+    title = "Conflict"
+    detail = "현재 상태에서 처리할 수 없는 요청입니다."
+
+
+class VersionConflict(Conflict):
+    """수정 요청의 version이 서버 값과 다를 때. 본문 `current`에 최신 데이터를 담는다."""
+
+    code = "version_conflict"
+    title = "Version conflict"
+    detail = "다른 멤버가 먼저 수정했습니다."
+
+    def __init__(self, current: dict[str, Any]) -> None:
+        """예외를 만든다.
+
+        Args:
+            current: 응답에 담을 최신 데이터 (JSON으로 바꿀 수 있는 값).
+        """
+        super().__init__()
+        self.current = current
+
+    @property
+    def extra(self) -> dict[str, Any]:
+        """최신 데이터를 담는다."""
+        return {"current": self.current}
+
 
 class Unauthorized(AppError):
     """인증 실패의 베이스. 응답에 `WWW-Authenticate` 헤더를 붙인다."""
@@ -148,7 +218,9 @@ def problem_response(
 
 async def _handle_app_error(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)  # noqa: S101  # 등록 시 타입으로 보장됨
-    return problem_response(exc.status, exc.code, exc.title, exc.detail, headers=exc.headers)
+    return problem_response(
+        exc.status, exc.code, exc.title, exc.detail, extra=exc.extra, headers=exc.headers
+    )
 
 
 async def _handle_validation_error(_: Request, exc: Exception) -> JSONResponse:

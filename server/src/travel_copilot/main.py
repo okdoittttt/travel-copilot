@@ -12,12 +12,16 @@ from travel_copilot.core.config import Settings, get_settings
 from travel_copilot.core.db import create_engine, create_sessionmaker
 from travel_copilot.core.errors import register_error_handlers
 from travel_copilot.core.logging import configure_logging
-from travel_copilot.core.middleware import RequestContextMiddleware
+from travel_copilot.core.middleware import NoStoreMiddleware, RequestContextMiddleware
 from travel_copilot.core.rate_limit import SlidingWindowRateLimiter
 from travel_copilot.health.router import router as health_router
+from travel_copilot.trips.router import router as trips_router
 from travel_copilot.users.router import router as users_router
 
 API_PREFIX = "/api/v1"
+
+# 앱에 등록하는 라우터. 보안 테스트(라우트 전수 검사)도 이 목록을 쓴다
+ROUTERS = (health_router, auth_router, users_router, trips_router)
 
 # 외부 HTTP 호출 타임아웃 (08-conventions S5)
 HTTP_TIMEOUT = httpx.Timeout(10.0, connect=3.0)
@@ -63,8 +67,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.rate_limiter = SlidingWindowRateLimiter()
+    app.add_middleware(NoStoreMiddleware)
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
-    for router in (health_router, auth_router, users_router):
+    for router in ROUTERS:
         app.include_router(router, prefix=API_PREFIX)
     return app
