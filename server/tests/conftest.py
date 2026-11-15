@@ -24,6 +24,7 @@ from travel_copilot.auth.access_token import create_access_token
 from travel_copilot.auth.google import GOOGLE_JWKS_URL
 from travel_copilot.core.config import Settings
 from travel_copilot.main import create_app
+from travel_copilot.places.client import AUTOCOMPLETE_URL, PLACES_BASE_URL
 from travel_copilot.trips.models import TripMember, TripRole
 from travel_copilot.users.models import User
 
@@ -37,6 +38,8 @@ WEB_CLIENT_ID = "test-web.apps.googleusercontent.com"
 IOS_CLIENT_ID = "test-ios.apps.googleusercontent.com"
 ANDROID_CLIENT_ID = "test-android.apps.googleusercontent.com"
 GOOGLE_KID = "test-kid-1"
+# 가짜 Places 키. 비밀값 검사에 걸리지 않게 반복 문자열로 만든다
+PLACES_KEY = "places" * 6
 
 
 def get_test_database_url() -> str:
@@ -53,6 +56,7 @@ def make_settings(**overrides: Any) -> Settings:
         "jwt_secret": TEST_JWT_SECRET,
         "google_web_client_id": WEB_CLIENT_ID,
         "google_allowed_azp": f"{IOS_CLIENT_ID},{ANDROID_CLIENT_ID}",
+        "google_places_api_key": PLACES_KEY,
     }
     values.update(overrides)
     return Settings(**values)
@@ -236,3 +240,55 @@ async def create_trip(client: AsyncClient, owner: SeededUser, **overrides: Any) 
     assert response.status_code == 201, response.text
     trip: dict[str, Any] = response.json()
     return trip
+
+
+# --- 가짜 Google Places (실제 Google을 호출하지 않는다) ----------------------
+
+ORSAY_ID = "ChIJG5Y_dinR5kcRWgfbpjyYXmU"
+ORSAY_LOCATION = {"latitude": 48.86, "longitude": 2.3266}
+
+
+def place_details_body(place_id: str = ORSAY_ID, **overrides: Any) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "id": place_id,
+        "formattedAddress": "1 Rue de la Légion d'Honneur, 75007 Paris, 프랑스",
+        "location": ORSAY_LOCATION,
+    }
+    body.update(overrides)
+    return body
+
+
+@pytest.fixture
+def google_places() -> Iterator[respx.MockRouter]:
+    """Places 자동완성·장소 상세를 가짜 응답으로 바꾼다. 경로 이름: autocomplete, details."""
+    with respx.mock(assert_all_called=False) as mock:
+        mock.post(AUTOCOMPLETE_URL, name="autocomplete").respond(
+            json={
+                "suggestions": [
+                    {
+                        "placePrediction": {
+                            "placeId": ORSAY_ID,
+                            "structuredFormat": {
+                                "mainText": {"text": "오르세 미술관"},
+                                "secondaryText": {"text": "프랑스 파리"},
+                            },
+                        }
+                    }
+                ]
+            }
+        )
+        mock.get(url__startswith=f"{PLACES_BASE_URL}/places/", name="details").respond(
+            json=place_details_body()
+        )
+        yield mock
+
+
+async def add_item(
+    client: AsyncClient, user: SeededUser, trip_id: str, **fields: Any
+) -> dict[str, Any]:
+    """API로 일정 항목을 추가하고 응답 본문을 돌려준다. 기본 날짜는 여행 둘째 날."""
+    body = {"day": "2026-12-21", "title": "일정", **fields}
+    response = await client.post(f"/api/v1/trips/{trip_id}/items", json=body, headers=user.headers)
+    assert response.status_code == 201, response.text
+    item: dict[str, Any] = response.json()
+    return item

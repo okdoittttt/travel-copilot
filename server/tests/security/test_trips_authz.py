@@ -39,6 +39,10 @@ TRIP_ROUTE_CASES: list[tuple[str, str, dict[str, Any] | None]] = [
     ("PATCH", "/api/v1/trips/{trip_id}/members/{user_id}", {"role": "viewer"}),
     ("DELETE", "/api/v1/trips/{trip_id}/members/{user_id}", None),
     ("POST", "/api/v1/trips/{trip_id}/transfer-ownership", {"user_id": "{user_id}"}),
+    ("POST", "/api/v1/trips/{trip_id}/items", {"day": "2026-12-21", "title": "탈취"}),
+    ("PATCH", "/api/v1/trips/{trip_id}/items/{item_id}", {"version": 1, "title": "탈취"}),
+    ("DELETE", "/api/v1/trips/{trip_id}/items/{item_id}", None),
+    ("PUT", "/api/v1/trips/{trip_id}/days/{day}/order", {"items": []}),
 ]
 
 
@@ -70,7 +74,12 @@ def _walk(dependant: Dependant) -> Iterator[Dependant]:
 
 
 def _fill(template: str, trip_id: str, user_id: uuid.UUID) -> str:
-    return template.replace("{trip_id}", trip_id).replace("{user_id}", str(user_id))
+    return (
+        template.replace("{trip_id}", trip_id)
+        .replace("{user_id}", str(user_id))
+        .replace("{item_id}", str(uuid.uuid4()))
+        .replace("{day}", "2026-12-21")
+    )
 
 
 async def _call(
@@ -82,7 +91,7 @@ async def _call(
 ) -> Any:
     method, template, body = case
     url = _fill(template, trip_id, target)
-    if method == "DELETE" and template == "/api/v1/trips/{trip_id}":
+    if method == "DELETE" and template.endswith(("/trips/{trip_id}", "/items/{item_id}")):
         url += "?version=1"
     json = {
         k: _fill(v, trip_id, target) if isinstance(v, str) else v for k, v in (body or {}).items()

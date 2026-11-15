@@ -32,6 +32,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 필요}
       GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:?GOOGLE_WEB_CLIENT_ID 필요}
       GOOGLE_ALLOWED_AZP: ${GOOGLE_ALLOWED_AZP:-}
+      # 비어 있으면 장소 API만 503 (features/itinerary.md 5.8)
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
     # 외부 포트 없음: Nginx를 거쳐서만 접근
     expose:
       - "8000"

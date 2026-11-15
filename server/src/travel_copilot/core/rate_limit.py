@@ -1,5 +1,6 @@
 """메모리 기반 요청 횟수 제한.
 
+IP 기준(인증 API)과 사용자 기준(로그인 후 API, 장소 검색)에 쓴다.
 서버 1대 기준이다. 서버를 여러 대로 늘리면 Redis 같은 공유 저장소로 바꿔야 한다
 (05-data-model 8절).
 """
@@ -59,6 +60,23 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def enforce(limiter: SlidingWindowRateLimiter, key: str, limit: int, window_seconds: float) -> None:
+    """요청 한 번을 기록하고, 초과면 429 예외를 던진다.
+
+    Args:
+        limiter: 앱의 제한기.
+        key: 제한 단위 (예: "user:<id>").
+        limit: 창 안에서 허용하는 최대 요청 수.
+        window_seconds: 창 길이(초).
+
+    Raises:
+        RateLimited: 제한을 넘었을 때.
+    """
+    retry_after = limiter.hit(key, limit, window_seconds)
+    if retry_after is not None:
+        raise RateLimited(retry_after_seconds=math.ceil(retry_after))
+
+
 def limit_by_ip(
     scope: str, per_minute: Callable[[Request], int]
 ) -> Callable[[Request], Awaitable[None]]:
@@ -74,8 +92,6 @@ def limit_by_ip(
 
     async def dependency(request: Request) -> None:
         limiter: SlidingWindowRateLimiter = request.app.state.rate_limiter
-        retry_after = limiter.hit(f"{scope}:{client_ip(request)}", per_minute(request), 60)
-        if retry_after is not None:
-            raise RateLimited(retry_after_seconds=math.ceil(retry_after))
+        enforce(limiter, f"{scope}:{client_ip(request)}", per_minute(request), 60)
 
     return dependency

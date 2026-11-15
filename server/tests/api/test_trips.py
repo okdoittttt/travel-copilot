@@ -66,7 +66,7 @@ async def test_get_trip_snapshot(client: AsyncClient, db: AsyncSession) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"trip", "members"}
+    assert set(body) == {"trip", "members", "items"}
     assert body["trip"]["my_role"] == "viewer"
     assert body["trip"]["member_count"] == 2
     assert [(m["display_name"], m["role"]) for m in body["members"]] == [

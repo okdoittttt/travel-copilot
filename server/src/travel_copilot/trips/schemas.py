@@ -9,6 +9,7 @@ from typing import Annotated, Any, Literal, Self
 from pydantic import AfterValidator, BaseModel, Field, model_validator
 
 from travel_copilot.core.schemas import RequestModel
+from travel_copilot.itinerary.schemas import ItemRead
 from travel_copilot.trips.models import TripRole
 
 MAX_TRIP_DAYS = 60
@@ -141,7 +142,8 @@ class MemberRead(BaseModel):
 
 
 class TripSnapshot(BaseModel):
-    """여행 스냅샷. F3에서 일정, F7에서 바우처가 추가된다."""
+    """여행 스냅샷: 여행 정보 + 멤버 + 전체 일정. F7에서 바우처가 추가된다."""
 
     trip: TripRead
     members: list[MemberRead]
+    items: list[ItemRead]

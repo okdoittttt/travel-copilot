@@ -9,12 +9,15 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from travel_copilot.core.errors import AppError, Forbidden, NotFound, VersionConflict
+from travel_copilot.itinerary import repository as itinerary_repository
+from travel_copilot.itinerary import service as itinerary_service
 from travel_copilot.trips import repository
 from travel_copilot.trips.dependencies import TripAccess
 from travel_copilot.trips.errors import (
     InvalidCursor,
     OwnerCannotLeave,
     OwnerRoleLocked,
+    TripPeriodConflict,
     TripPeriodInvalid,
 )
 from travel_copilot.trips.models import Trip, TripMember, TripRole
@@ -151,7 +154,11 @@ async def get_snapshot(session: AsyncSession, access: TripAccess) -> TripSnapsho
     """
     rows = await repository.list_members(session, access.trip.id)
     members = [_member_read(member, name) for member, name in rows]
-    return TripSnapshot(trip=_trip_read(access.trip, access.role, len(members)), members=members)
+    return TripSnapshot(
+        trip=_trip_read(access.trip, access.role, len(members)),
+        members=members,
+        items=await itinerary_service.list_items(session, access.trip.id),
+    )
 
 
 async def _conflict(
@@ -170,7 +177,7 @@ async def update_trip(session: AsyncSession, access: TripAccess, body: TripUpdat
 
     Args:
         session: DB 세션.
-        access: 권한 확인(editor 이상)을 통과한 요청 정보.
+        access: 권한 확인(editor 이상, 여행 행 잠금)을 통과한 요청 정보.
         body: 바꿀 필드와 요청자가 본 version.
 
     Returns:
@@ -179,6 +186,7 @@ async def update_trip(session: AsyncSession, access: TripAccess, body: TripUpdat
     Raises:
         VersionConflict: version이 서버 값과 다를 때. 최신 여행 정보를 담는다.
         TripPeriodInvalid: 기존 값과 합친 기간이 규칙에 맞지 않을 때.
+        TripPeriodConflict: 줄어든 기간 밖에 일정 항목이 있을 때.
     """
     # rollback 뒤에는 ORM 객체 속성을 읽을 수 없으므로 필요한 값을 먼저 꺼내 둔다
     trip_id, my_role = access.trip.id, access.role
@@ -189,7 +197,10 @@ async def update_trip(session: AsyncSession, access: TripAccess, body: TripUpdat
     end = changes.get("end_date", access.trip.end_date)
     if not period_is_valid(start, end):
         raise TripPeriodInvalid
-    # TODO(F3): 기간이 줄어 밖으로 밀려나는 일정 항목이 있으면 409 (features/trips.md 4절)
+    # 여행 행을 잠근 상태라 확인과 수정 사이에 일정이 추가되지 않는다
+    outside = await itinerary_repository.count_outside(session, trip_id, start, end)
+    if outside:
+        raise TripPeriodConflict(outside)
 
     trip = await repository.update_trip_if_version(session, trip_id, body.version, changes)
     if trip is None:

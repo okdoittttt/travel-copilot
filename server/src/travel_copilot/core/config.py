@@ -46,8 +46,16 @@ class Settings(DatabaseSettings):
     # 쉼표로 구분한 iOS·Android 클라이언트 ID. 비어 있으면 azp를 검사하지 않는다.
     google_allowed_azp: str = ""
 
+    # Google Places (서버 전용 키). 비어 있으면 장소 API만 503 (features/itinerary.md 5.8)
+    google_places_api_key: SecretStr = SecretStr("")
+
     # 요청 횟수 제한
     auth_rate_limit_per_minute: int = Field(default=10, ge=1)
+    # 로그인한 사용자 기준, 모든 인증 API 합산
+    user_rate_limit_per_minute: int = Field(default=120, ge=1)
+    places_autocomplete_per_minute: int = Field(default=60, ge=1)
+    places_autocomplete_per_day: int = Field(default=1000, ge=1)
+    places_details_per_day: int = Field(default=300, ge=1)
 
     @field_validator("jwt_secret")
     @classmethod
@@ -61,6 +69,11 @@ class Settings(DatabaseSettings):
     def docs_enabled(self) -> bool:
         """OpenAPI 문서를 노출할지 여부. 로컬에서만 켠다."""
         return self.env is Environment.LOCAL
+
+    @property
+    def places_enabled(self) -> bool:
+        """Places 키가 설정돼 있는지."""
+        return bool(self.google_places_api_key.get_secret_value())
 
     @property
     def google_allowed_azp_set(self) -> frozenset[str]:

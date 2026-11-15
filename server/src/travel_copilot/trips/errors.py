@@ -1,5 +1,7 @@
 """여행 도메인 예외."""
 
+from datetime import date
+
 from travel_copilot.core.errors import Conflict, InvalidInput
 
 
@@ -21,6 +23,23 @@ class TripPeriodInvalid(InvalidInput):
     """수정 후 여행 기간이 규칙(시작 ≤ 종료, 최대 60일)에 맞지 않을 때."""
 
     detail = "여행 기간을 확인해주세요. 종료일은 시작일 이후, 최대 60일입니다."
+
+
+class TripPeriodConflict(Conflict):
+    """기간을 줄이면 밖으로 밀려나는 일정 항목이 있을 때."""
+
+    code = "trip_period_conflict"
+
+    def __init__(self, outside: dict[date, int]) -> None:
+        """예외를 만든다.
+
+        Args:
+            outside: 밀려나는 날짜 → 항목 수.
+        """
+        days = ", ".join(f"{day.month}/{day.day} {count}개" for day, count in outside.items())
+        super().__init__(
+            f"기간 밖으로 밀려나는 일정이 있습니다 ({days}). 먼저 옮기거나 삭제해주세요."
+        )
 
 
 class InvalidCursor(InvalidInput):
