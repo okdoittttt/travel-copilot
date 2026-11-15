@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # 1단계: 의존성 설치 (빌드 도구는 최종 이미지에 남기지 않는다)
-FROM python:3.13-slim AS builder
+FROM python:3.15-slim AS builder
 COPY --from=ghcr.io/astral-sh/uv:0.11.2 /uv /bin/uv
 
 ENV UV_COMPILE_BYTECODE=1 \
@@ -18,7 +18,7 @@ COPY migrations ./migrations
 RUN uv sync --frozen --no-dev
 
 # 2단계: 실행 이미지
-FROM python:3.13-slim
+FROM python:3.15-slim
 
 # root가 아닌 전용 사용자로 실행한다. 앱 파일은 root 소유라 실행 중에 고칠 수 없다.
 RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app
