@@ -110,7 +110,16 @@ def _set_location(item: ItineraryItem, place_id: str | None, location: LatLng | 
         item.location_fetched_at = _now()
 
 
-def _check_day(access: TripAccess, day: date) -> None:
+def check_day(access: TripAccess, day: date) -> None:
+    """날짜가 여행 기간 안인지 확인한다.
+
+    Args:
+        access: 권한 확인을 통과한 요청 정보.
+        day: 확인할 현지 날짜.
+
+    Raises:
+        DayOutOfRange: 기간 밖일 때.
+    """
     if not access.trip.start_date <= day <= access.trip.end_date:
         raise DayOutOfRange
 
@@ -172,7 +181,7 @@ async def create_item(
         DayOutOfRange: 날짜가 여행 기간 밖일 때.
         DayItemLimit: 그날 항목이 이미 50개일 때.
     """
-    _check_day(access, body.day)
+    check_day(access, body.day)
     position = await _check_day_capacity(session, access.trip.id, body.day)
     location = await locator.locate(user_id, body.place_id) if body.place_id else None
     item = ItineraryItem(
@@ -238,7 +247,7 @@ async def update_item(
     old_day = item.day
     new_day = changes.pop("day", old_day)
     if new_day != old_day:
-        _check_day(access, new_day)
+        check_day(access, new_day)
         item.position = await _check_day_capacity(session, access.trip.id, new_day)
         item.day = new_day
 

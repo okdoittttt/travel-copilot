@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:travelcopilot/core/router/app_router.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
@@ -29,6 +31,16 @@ class MembersTab extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(l10n.ownerMemberNotice, style: Theme.of(context).textTheme.bodySmall),
+            ),
+          if (isOwner)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: OutlinedButton.icon(
+                key: const Key('open-invites'),
+                onPressed: () => context.push(Routes.invites(trip.id)),
+                icon: const Icon(Icons.link),
+                label: Text(l10n.invitesTitle),
+              ),
             ),
           for (final member in snapshot.members)
             _MemberTile(

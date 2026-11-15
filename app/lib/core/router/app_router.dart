@@ -5,6 +5,9 @@ import 'package:travelcopilot/features/auth/data/auth_models.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
 import 'package:travelcopilot/features/auth/ui/login_screen.dart';
 import 'package:travelcopilot/features/auth/ui/splash_screen.dart';
+import 'package:travelcopilot/features/invites/state/invite_providers.dart';
+import 'package:travelcopilot/features/invites/ui/invite_join_screen.dart';
+import 'package:travelcopilot/features/invites/ui/invites_screen.dart';
 import 'package:travelcopilot/features/itinerary/ui/item_form_screen.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/ui/trip_detail_screen.dart';
@@ -23,13 +26,18 @@ abstract final class Routes {
   static String newItem(String tripId, DateTime day) =>
       '/trips/$tripId/items/new?day=${formatDateOnly(day)}';
   static String item(String tripId, String itemId) => '/trips/$tripId/items/$itemId';
+  static String invites(String tripId) => '/trips/$tripId/invites';
+
+  /// 초대 참여 (S16). 토큰은 경로에 넣지 않는다 — 메모리 provider에만 둔다.
+  static const invite = '/invite';
 }
 
 /// 로그인 상태에 따라 화면을 정한다.
 ///
 /// 확인 중 → 시작 화면, 로그인 안 됨 → 로그인 화면, 로그인됨 → 여행 목록.
+/// 처리 중인 초대가 있으면([hasPendingInvite]) 로그인 뒤 여행 목록 대신 참여 화면으로 간다.
 @visibleForTesting
-String? redirectFor(AsyncValue<AppUser?> auth, String location) {
+String? redirectFor(AsyncValue<AppUser?> auth, String location, {bool hasPendingInvite = false}) {
   if (auth.isLoading && !auth.hasValue) {
     return location == Routes.splash ? null : Routes.splash;
   }
@@ -37,7 +45,9 @@ String? redirectFor(AsyncValue<AppUser?> auth, String location) {
   if (user == null) {
     return location == Routes.login ? null : Routes.login;
   }
-  if (location == Routes.splash || location == Routes.login) return Routes.trips;
+  if (location == Routes.splash || location == Routes.login) {
+    return hasPendingInvite ? Routes.invite : Routes.trips;
+  }
   return null;
 }
 
@@ -49,11 +59,15 @@ GoRouter appRouter(Ref ref) {
 
   final router = GoRouter(
     refreshListenable: authChanges,
-    redirect: (context, state) =>
-        redirectFor(ref.read(authControllerProvider), state.matchedLocation),
+    redirect: (context, state) => redirectFor(
+      ref.read(authControllerProvider),
+      state.matchedLocation,
+      hasPendingInvite: ref.read(pendingInviteProvider) != null,
+    ),
     routes: [
       GoRoute(path: Routes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: Routes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(path: Routes.invite, builder: (context, state) => const InviteJoinScreen()),
       GoRoute(
         path: Routes.trips,
         builder: (context, state) => const TripListScreen(),
@@ -64,6 +78,10 @@ GoRouter appRouter(Ref ref) {
             path: ':tripId',
             builder: (context, state) => TripDetailScreen(tripId: state.pathParameters['tripId']!),
             routes: [
+              GoRoute(
+                path: 'invites',
+                builder: (context, state) => InvitesScreen(tripId: state.pathParameters['tripId']!),
+              ),
               GoRoute(
                 path: 'edit',
                 builder: (context, state) =>

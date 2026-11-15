@@ -1,7 +1,7 @@
 # 실행 가이드
 
 > 로컬에서 Travel Copilot을 설정하고, 실행하고, 동작을 확인하는 방법.
-> 기준: F3(일정·장소 검색) 구현 시점 (2026-11-10). 기능이 추가될 때마다 이 문서를 갱신한다.
+> 기준: F5(초대 링크) 구현 시점 (2026-11-15). 기능이 추가될 때마다 이 문서를 갱신한다.
 
 ## 1. 구성 한눈에 보기
 
@@ -99,6 +99,8 @@ cd app
 flutter pub get
 xcrun simctl boot "iPhone 17 Pro"
 xcrun simctl keychain booted add-root-cert "$(mkcert -CAROOT)/rootCA.pem"   # 시뮬레이터마다 한 번
+# 앱 지도 키 (선택, 없으면 지도 탭만 안내 문구). git 제외 파일이다
+cp ios/Flutter/Secrets.xcconfig.example ios/Flutter/Secrets.xcconfig   # 열어서 GOOGLE_MAPS_IOS_KEY = 키값
 flutter run --dart-define-from-file=env/local.json
 ```
 
@@ -222,15 +224,34 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | 34 | 여행 기간 축소 | 마지막 날에 일정을 둔 채 여행 수정으로 종료일을 하루 당기기 | "기간 밖으로 밀려나는 일정이 있습니다 (12/27 1개)…" 안내, 저장 안 됨 |
 | 35 | viewer | 앱에서 가짜 멤버에게 소유권 넘기기 → 5.1의 "내 역할을 viewer로" SQL → 일정 탭 당겨서 새로고침 | 추가 버튼·끌기·밀기 없음, 일정을 누르면 읽기 전용 |
 | 36 | Google 호출 수 | Google Cloud 콘솔 → Places API (New) → 측정항목 | 검색 한 번에 자동완성 몇 회 + 장소 상세 1회 |
+| 37 | 이동 구간 | 장소 있는 일정 3개, 둘째·셋째에 이동수단(도보·대중교통) 선택 → 일정 탭 | 항목 사이에 "21분 · 3.9km" 같은 줄. **서버 키에 Routes API 허용 필요** (없으면 "이동시간을 알 수 없어요") |
+| 38 | 이동수단 미선택·장소 없음 | 이동수단을 비운 항목, 장소 없는 항목 | "이동수단을 선택하세요", "— 장소 없음" |
+| 39 | 늦음 경고 | 첫 일정 10:00·머무는 시간 2시간, 다음 일정 시작을 12:00으로 | 구간 줄이 주황색 "⚠ N분 늦음" |
+| 40 | 지도 | [지도] 전환 | 번호 마커, 처음에 모든 마커가 보이게. 마커 누르면 장소 정보 시트. **지도 키 필요** (없으면 "지도를 사용할 수 없습니다") |
+| 41 | 이동시간 저장 안 함 | 같은 날을 두 번 열기 → Google Cloud 콘솔 Routes 측정항목 | 열 때마다 구간 수만큼 호출 (캐시 없음, 약관) |
+| 42 | 초대 링크 만들기 | owner로 여행 → 멤버 탭 → [초대 링크] → [새 링크] → 편집자 선택 | 편집자 경고 문구. [만들기] → 공유 시트가 열림 ([복사]로 링크 복사). 화면 목록에는 링크 주소가 없음 |
+| 43 | 링크로 참여 | 다른 계정으로 로그인(5.1 "두 번째 계정") → 여행 목록 오른쪽 위 사람+ 아이콘 → 링크 붙여넣기 → [다음] | "OOO님이 '여행'(기간)에 보기 전용 멤버로 초대했습니다" → [참여] → 여행 상세, 여행 목록에 보임 |
+| 44 | 같은 링크 다시 | 참여한 계정으로 같은 링크를 다시 붙여넣기 | 확인 없이 바로 여행 상세 (사용 횟수 안 늘어남) |
+| 45 | 폐기된 링크 | owner가 [폐기] → 다른 계정이 그 링크 붙여넣기 | "더 이상 쓸 수 없는 초대 링크입니다…" |
+| 46 | 다른 사이트 링크 | `https://evil.example.com/invite#...` 붙여넣기 | "초대 링크 형식이 아닙니다" (서버 요청 없음) |
+| 47 | 내보낼 때 링크 폐기 | 열린 링크가 있는 상태에서 멤버 내보내기 | 대화상자에 "열린 초대 링크도 모두 폐기 (N개)" 체크됨. 내보낸 뒤 목록의 링크가 "폐기됨" |
+| 48 | 안내 웹페이지(W01) | 브라우저로 `https://localhost/invite` | 설치 안내 페이지. 개발자 도구 응답 헤더에 `Content-Security-Policy` |
+| 49 | 앱 링크 확인 파일 | `curl --cacert "$CA" https://localhost/.well-known/apple-app-site-association` (assetlinks.json도) | JSON, `content-type: application/json`. 팀 ID·인증서 지문은 아직 자리 표시 값 (P1·P4 후 교체) |
 
 ### 5.1 수동 확인 도우미 (로컬 전용)
 
 **Places 키 넣기 (#29~31)**: 저장소 루트 `.env`(`.env.example` 아님)에 `GOOGLE_PLACES_API_KEY=키값`을 추가하고 서버를 다시 띄운다 (`docker compose ... up -d`). 키는 Google Cloud에서 "Places API (New)"만 허용하도록 제한한 서버용 키여야 한다.
 
-**오래된 좌표 정리 (Google 약관 30일)**: `docker compose --env-file .env -f infra/docker-compose.yml exec server python -m travel_copilot.jobs.expire_locations` → "좌표를 지운 항목: N". 자동 실행은 운영 배포 때 정한다.
+**오래된 좌표 정리 (Google 약관 30일)**: 서버가 떠 있는 동안 6시간마다 자동으로 지운다 (F4). 바로 지우려면 `docker compose --env-file .env -f infra/docker-compose.yml exec server python -m travel_copilot.jobs.expire_locations` → "좌표를 지운 항목: N".
+
+**두 번째 계정으로 참여 확인 (#43~47)**: 시뮬레이터에서 [로그아웃] → 다른 Google 계정으로 로그인하면 된다. 링크는 #42의 공유 시트에서 [복사]한 것을 붙여넣는다 (같은 시뮬레이터라 클립보드가 남아 있다). 계정이 하나뿐이면 아래 curl로 가짜 사용자가 참여하게 할 수 있다.
+
+**링크를 눌러 앱이 바로 열리는 것**은 아직 확인할 수 없다. Apple Developer 계정(P1)과 공인 도메인(P4)이 있어야 Apple·Google이 확인 파일을 가져갈 수 있기 때문이다 (features/invites.md 12절). 지금은 붙여넣기 경로로 확인한다.
+
+**지도 키 넣기 (#40)**: `app/ios/Flutter/Secrets.xcconfig`에 `GOOGLE_MAPS_IOS_KEY = 키값` (git 제외 파일, 저장소가 공개라서). 키는 Google Cloud에서 "iOS 앱" + 번들 ID `com.okdoittttt.travelcopilot`, API는 "Maps SDK for iOS"만 허용. 넣은 뒤 앱을 다시 빌드(`flutter run`)해야 반영된다.
 
 
-초대 기능(F5) 전까지는 두 번째 사용자를 SQL로 만든다. **로컬 개발 DB에서만** 쓴다.
+두 번째 사용자가 필요한 확인(멤버 관리, 초대 참여)은 SQL로 가짜 사용자를 만들어도 된다. **로컬 개발 DB에서만** 쓴다.
 
 ```bash
 set -a; . ./.env; set +a
@@ -252,6 +273,13 @@ WHERE user_id = (SELECT id FROM users ORDER BY created_at LIMIT 1)
 MY_ID=$($PSQL -tAc "SELECT id FROM users ORDER BY created_at LIMIT 1")
 TOKEN=$(cd server && uv run python -c "import sys,uuid; from travel_copilot.auth.access_token import create_access_token as c; print(c(uuid.UUID(sys.argv[1]), sys.argv[2], 900))" "$MY_ID" "$JWT_SECRET")
 
+# 가짜 사용자가 초대 링크로 참여 (#43 대체). LINK는 #42에서 복사한 링크
+FAKE_ID=$($PSQL -tAc "INSERT INTO users (id, display_name, created_at, updated_at) VALUES (gen_random_uuid(), '초대받은 친구', now(), now()) RETURNING id" | head -1)
+FAKE_TOKEN=$(cd server && uv run python -c "import sys,uuid; from travel_copilot.auth.access_token import create_access_token as c; print(c(uuid.UUID(sys.argv[1]), sys.argv[2], 900))" "$FAKE_ID" "$JWT_SECRET")
+INVITE="${LINK#*#}"   # 링크의 # 뒤만. 토큰은 본문으로만 보낸다
+curl --cacert "$CA" -X POST -H "Authorization: Bearer $FAKE_TOKEN" -H 'content-type: application/json' \
+  -d "{\"token\": \"$INVITE\"}" https://localhost/api/v1/invites/accept
+
 # 여행 제목 먼저 바꾸기 (#23). TRIP_ID와 VERSION은 GET /trips 응답에서
 curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type: application/json' \
   -d '{"version": VERSION, "title": "다른 사람이 바꾼 제목"}' https://localhost/api/v1/trips/TRIP_ID
@@ -263,6 +291,7 @@ curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type:
 |---|---|---|
 | `Bind for 0.0.0.0:5432 failed: port is already allocated` | 다른 프로젝트가 포트 사용 | `.env`의 `POSTGRES_HOST_PORT`를 다른 값으로 |
 | `80`/`443` 포트 충돌 | 다른 웹 서버 실행 중 | 해당 프로세스 종료 (`lsof -nP -iTCP:443 -sTCP:LISTEN`) |
+| 앱 시작 시 `INVITE_BASE_URL이 없거나 HTTPS가 아닙니다` | `env/*.json`에 값 없음 (F5에서 추가) | `"INVITE_BASE_URL": "https://localhost"` (서버의 `INVITE_BASE_URL`과 같게) |
 | `nginx.conf`를 고쳤는데 반영 안 됨 / `nginx -t`가 파일 없음 | 편집기가 파일을 새로 만들어 단일 파일 마운트가 옛 파일을 가리킴 | `docker compose --env-file .env -f infra/docker-compose.yml up -d --force-recreate nginx` |
 | curl `SSL certificate problem` | 로컬 인증서를 믿지 않음 | `--cacert "$(mkcert -CAROOT)/rootCA.pem"` 붙이거나 `mkcert -install` |
 | 앱이 "연결 실패" (서버는 정상) | 시뮬레이터·에뮬레이터에 루트 인증서 미설치 | 3.2·3.3의 인증서 설치 단계 |
@@ -280,10 +309,11 @@ curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type:
 
 | 항목 | 시점 |
 |---|---|
-| Android 에뮬레이터 실행 확인 (F0·F1) | 늦어도 F5 전에 Android Studio 설치 후 |
+| Android 에뮬레이터 실행 확인 (F1~F5) | F5 직후 Android Studio 설치 후 한 번에 (features/invites.md 12절) |
+| 링크를 눌러 앱 열기 (Universal Links·App Links) | P1(Apple Developer)·P4(도메인)·스테이징 준비 후 |
 | 카카오·Apple 로그인 | F10 |
 | 파일 저장소(S3 호환) | F7 (MinIO 공식 이미지 배포 중단, 대체 도구는 F7 명세에서 결정) |
 | 스테이징 서버 | 출시 준비 전 (외부 준비물 P6) |
-| 이동시간·일정 지도 | F4 |
-| 좌표 30일 정리 자동 실행 | 운영 배포 (로드맵 5단계) |
+| Android 지도 키 | Android 확인 때 |
+| 실시간 교통 반영 이동시간, 경로선 | 2차 검토 |
 | Nginx ↔ 서버 구간 패킷 캡처 | 보안 로드맵 0단계 학습 과제 |

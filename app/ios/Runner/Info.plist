@@ -22,6 +22,9 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<!-- 지도 키: ios/Flutter/Secrets.xcconfig 값이 빌드 때 들어간다 (git 제외) -->
+	<key>GMSApiKey</key>
+	<string>$(GOOGLE_MAPS_IOS_KEY)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -35,6 +38,10 @@
 			</array>
 		</dict>
 	</array>
+	<!-- 초대 링크는 app_links로 직접 받는다. Flutter 기본 딥링크 처리는 URL을 라우터로 넘겨
+	     토큰이 라우터 상태·로그에 들어갈 수 있어서 끈다 (features/invites.md 5.7) -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>

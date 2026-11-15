@@ -28,4 +28,20 @@ void main() {
     expect(redirectFor(signedIn, Routes.login), Routes.trips);
     expect(redirectFor(signedIn, Routes.trips), isNull);
   });
+
+  test('처리 중인 초대가 있으면 로그인 뒤 참여 화면으로', () {
+    const signedIn = AsyncData<AppUser?>(user);
+    const signedOut = AsyncData<AppUser?>(null);
+
+    // 로그인 전에는 참여 화면도 로그인으로 보낸다 (토큰은 메모리에 남아 있다)
+    expect(redirectFor(signedOut, Routes.invite, hasPendingInvite: true), Routes.login);
+    expect(redirectFor(signedIn, Routes.login, hasPendingInvite: true), Routes.invite);
+    expect(redirectFor(signedIn, Routes.splash, hasPendingInvite: true), Routes.invite);
+    expect(redirectFor(signedIn, Routes.invite, hasPendingInvite: true), isNull);
+  });
+
+  test('초대 경로에 토큰이 들어가지 않는다', () {
+    expect(Routes.invite, '/invite');
+    expect(Routes.invites('t1'), '/trips/t1/invites');
+  });
 }

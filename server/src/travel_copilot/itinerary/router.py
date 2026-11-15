@@ -12,16 +12,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from travel_copilot.auth.dependencies import CurrentUser
 from travel_copilot.core.db import get_session
+from travel_copilot.core.rate_limit import enforce
+from travel_copilot.directions.client import GoogleRoutesClient
 from travel_copilot.itinerary import service
+from travel_copilot.itinerary.day_view import day_view
 from travel_copilot.itinerary.schemas import (
     DayItems,
+    DayView,
     ItemCreate,
     ItemRead,
     ItemUpdate,
     ReorderRequest,
 )
 from travel_copilot.itinerary.service import PlaceLocator
-from travel_copilot.trips.dependencies import TripEditorLocked
+from travel_copilot.trips.dependencies import TripEditorLocked, TripViewer
+
+HOUR_SECONDS = 3600
 
 router = APIRouter(prefix="/trips/{trip_id}", tags=["itinerary"])
 
@@ -36,6 +42,36 @@ def get_place_locator(request: Request) -> PlaceLocator:
 
 
 Locator = Annotated[PlaceLocator, Depends(get_place_locator)]
+
+
+def get_routes_client(request: Request) -> GoogleRoutesClient | None:
+    """Routes 클라이언트. 서버 키가 없으면 None (모든 구간 unavailable)."""
+    client: GoogleRoutesClient | None = request.app.state.routes_client
+    return client
+
+
+async def day_view_rate_limit(request: Request, user: CurrentUser) -> None:
+    """하루 일정 조회 사용자별 제한: 시간당 (Google Routes 호출, T23)."""
+    settings = request.app.state.settings
+    enforce(
+        request.app.state.rate_limiter,
+        f"day-view:{user.id}",
+        settings.day_view_per_hour,
+        HOUR_SECONDS,
+    )
+
+
+@router.get("/days/{day}", dependencies=[Depends(day_view_rate_limit)])
+async def get_day(
+    day: date,
+    access: TripViewer,
+    user: CurrentUser,
+    session: Session,
+    locator: Locator,
+    routes: Annotated[GoogleRoutesClient | None, Depends(get_routes_client)],
+) -> DayView:
+    """하루 일정 + 이동 구간. 이동시간은 저장하지 않고 요청마다 계산한다."""
+    return await day_view(session, access, user.id, day, locator, routes)
 
 
 @router.post("/items", status_code=status.HTTP_201_CREATED)

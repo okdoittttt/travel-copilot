@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
 import 'package:travelcopilot/core/api/app_exception.dart';
 import 'package:travelcopilot/core/router/app_router.dart';
+import 'package:travelcopilot/features/invites/data/invite_models.dart';
+import 'package:travelcopilot/features/invites/data/invites_api.dart';
+import 'package:travelcopilot/features/invites/state/invite_providers.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
@@ -195,19 +198,81 @@ Future<void> changeMemberRole(
 });
 
 /// 멤버 내보내기 (owner).
+///
+/// 열린 초대 링크가 있으면 "링크도 모두 폐기" 체크박스(기본 선택)를 보여준다.
+/// 내보낸 사람이 남은 링크로 다시 들어오는 것을 막기 위해서다 (features/invites.md 5.6).
 Future<void> removeMember(BuildContext context, WidgetRef ref, Trip trip, TripMember member) async {
-  final l10n = AppLocalizations.of(context);
-  final confirmed = await _confirm(
-    context,
-    title: l10n.removeTitle(member.displayName),
-    body: l10n.removeBody,
-    action: l10n.memberRemove,
-    destructive: true,
+  final openInvites = await _openInviteCount(ref, trip.id);
+  if (!context.mounted) return;
+  final result = await showDialog<({bool revokeInvites})>(
+    context: context,
+    builder: (_) => _RemoveMemberDialog(name: member.displayName, openInvites: openInvites),
   );
-  if (!confirmed || !context.mounted) return;
+  if (result == null || !context.mounted) return;
   await _memberAction(context, ref, trip, () async {
     await ref.read(tripsApiProvider).removeMember(trip.id, member.userId);
+    if (result.revokeInvites) {
+      await ref.read(invitesApiProvider).revokeAll(trip.id);
+      ref.invalidate(invitesProvider(trip.id));
+    }
   });
+}
+
+/// 열린 초대 링크 수. 못 읽으면 0으로 보고 체크박스를 숨긴다 (내보내기 자체는 막지 않는다).
+Future<int> _openInviteCount(WidgetRef ref, String tripId) async {
+  try {
+    final invites = await ref.read(invitesApiProvider).list(tripId);
+    return invites.where((i) => i.status == InviteStatus.active).length;
+  } on AppException {
+    return 0;
+  }
+}
+
+class _RemoveMemberDialog extends StatefulWidget {
+  const new({required this.name, required this.openInvites});
+
+  final String name;
+  final int openInvites;
+
+  @override
+  State<_RemoveMemberDialog> createState() => _RemoveMemberDialogState();
+}
+
+class _RemoveMemberDialogState extends State<_RemoveMemberDialog> {
+  bool _revokeInvites = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.removeTitle(widget.name)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.removeBody),
+          if (widget.openInvites > 0)
+            CheckboxListTile(
+              key: const Key('revoke-invites-checkbox'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _revokeInvites,
+              onChanged: (value) => setState(() => _revokeInvites = value ?? false),
+              title: Text(l10n.removeRevokeInvites(widget.openInvites)),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        TextButton(
+          onPressed: () =>
+              Navigator.pop(context, (revokeInvites: widget.openInvites > 0 && _revokeInvites)),
+          style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+          child: Text(l10n.memberRemove),
+        ),
+      ],
+    );
+  }
 }
 
 /// 소유권 넘기기 (owner). 넘기면 나는 editor가 된다.

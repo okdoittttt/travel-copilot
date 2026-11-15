@@ -9,6 +9,8 @@ ItineraryItem makeItem({
   String? memo,
   String? placeId,
   int? stayMinutes,
+  String? startTime,
+  TravelMode? travelMode,
 }) => ItineraryItem(
   id: id,
   day: day ?? DateTime(2026, 12, 21),
@@ -19,4 +21,6 @@ ItineraryItem makeItem({
   memo: memo,
   placeId: placeId,
   stayMinutes: stayMinutes,
+  startTime: startTime,
+  travelMode: travelMode,
 );

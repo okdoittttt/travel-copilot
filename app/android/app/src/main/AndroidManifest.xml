@@ -20,6 +20,8 @@
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues
                  to determine the Window background behind the Flutter UI. -->
+            <!-- 초대 링크는 app_links로 직접 받는다 (토큰이 라우터로 넘어가지 않게) -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
@@ -27,6 +29,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- 초대 링크 App Link (features/invites.md 5.7). 커스텀 스킴은 쓰지 않는다 (T13).
+                 호스트는 gradle 속성 inviteHost (도메인 준비 전 기본값은 존재하지 않는 invite.invalid) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="${inviteHost}" android:path="/invite"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

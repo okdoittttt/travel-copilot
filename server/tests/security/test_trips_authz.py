@@ -43,6 +43,11 @@ TRIP_ROUTE_CASES: list[tuple[str, str, dict[str, Any] | None]] = [
     ("PATCH", "/api/v1/trips/{trip_id}/items/{item_id}", {"version": 1, "title": "탈취"}),
     ("DELETE", "/api/v1/trips/{trip_id}/items/{item_id}", None),
     ("PUT", "/api/v1/trips/{trip_id}/days/{day}/order", {"items": []}),
+    ("GET", "/api/v1/trips/{trip_id}/days/{day}", None),
+    ("POST", "/api/v1/trips/{trip_id}/invites", {"role": "editor"}),
+    ("GET", "/api/v1/trips/{trip_id}/invites", None),
+    ("DELETE", "/api/v1/trips/{trip_id}/invites/{invite_id}", None),
+    ("POST", "/api/v1/trips/{trip_id}/invites/revoke-all", None),
 ]
 
 
@@ -78,6 +83,7 @@ def _fill(template: str, trip_id: str, user_id: uuid.UUID) -> str:
         template.replace("{trip_id}", trip_id)
         .replace("{user_id}", str(user_id))
         .replace("{item_id}", str(uuid.uuid4()))
+        .replace("{invite_id}", str(uuid.uuid4()))
         .replace("{day}", "2026-12-21")
     )
 

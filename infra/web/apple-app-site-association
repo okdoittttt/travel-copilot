@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["APPLE_TEAM_ID.com.okdoittttt.travelcopilot"],
+        "components": [
+          { "/": "/invite", "comment": "초대 링크 (features/invites.md 5.7). APPLE_TEAM_ID는 Apple Developer 가입 후 교체" }
+        ]
+      }
+    ]
+  }
+}

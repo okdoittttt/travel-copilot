@@ -32,3 +32,6 @@ Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# 앱 지도 키 (features/routes-map.md 5.5)
+Flutter/Secrets.xcconfig

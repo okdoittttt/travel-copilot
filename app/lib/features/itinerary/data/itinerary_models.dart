@@ -75,3 +75,40 @@ abstract class ItemDraft with _$ItemDraft {
     };
   }
 }
+
+/// 이동 구간 상태 (features/routes-map.md 6절).
+enum LegStatus {
+  ok,
+  @JsonValue('no_location')
+  noLocation,
+  @JsonValue('no_mode')
+  noMode,
+  unavailable,
+}
+
+/// 인접한 두 일정 사이 이동 구간. Google 약관상 기기에 저장하지 않는다.
+@freezed
+abstract class RouteLeg with _$RouteLeg {
+  const factory({
+    required String fromItemId,
+    required String toItemId,
+    required LegStatus status,
+    TravelMode? mode,
+    int? durationSeconds,
+    int? distanceMeters,
+  }) = _RouteLeg;
+
+  factory fromJson(Map<String, dynamic> json) => _$RouteLegFromJson(json);
+}
+
+/// 하루 일정 + 이동 구간.
+@freezed
+abstract class DayView with _$DayView {
+  const factory({
+    @DateOnlyConverter() required DateTime date,
+    required List<ItineraryItem> items,
+    required List<RouteLeg> legs,
+  }) = _DayView;
+
+  factory fromJson(Map<String, dynamic> json) => _$DayViewFromJson(json);
+}

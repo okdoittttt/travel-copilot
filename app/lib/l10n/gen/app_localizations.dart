@@ -655,6 +655,276 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'일정이 바뀌어 새로 불러왔습니다.'**
   String get itineraryChanged;
+
+  /// No description provided for @viewList.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록'**
+  String get viewList;
+
+  /// No description provided for @viewMap.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도'**
+  String get viewMap;
+
+  /// No description provided for @legNoMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동수단을 선택하세요'**
+  String get legNoMode;
+
+  /// No description provided for @legNoLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 없음'**
+  String get legNoLocation;
+
+  /// No description provided for @legUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동시간을 알 수 없어요'**
+  String get legUnavailable;
+
+  /// No description provided for @legLate.
+  ///
+  /// In ko, this message translates to:
+  /// **'{minutes}분 늦음'**
+  String legLate(int minutes);
+
+  /// No description provided for @legsLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동시간을 불러오지 못했습니다.'**
+  String get legsLoadFailed;
+
+  /// No description provided for @mapUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도를 사용할 수 없습니다.'**
+  String get mapUnavailable;
+
+  /// No description provided for @mapNoPlaces.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도에 표시할 장소가 없어요.'**
+  String get mapNoPlaces;
+
+  /// No description provided for @invitesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 링크'**
+  String get invitesTitle;
+
+  /// No description provided for @inviteNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 링크'**
+  String get inviteNew;
+
+  /// No description provided for @inviteCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'만들기'**
+  String get inviteCreate;
+
+  /// No description provided for @inviteRole.
+  ///
+  /// In ko, this message translates to:
+  /// **'역할'**
+  String get inviteRole;
+
+  /// No description provided for @inviteMaxUses.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 횟수'**
+  String get inviteMaxUses;
+
+  /// No description provided for @inviteExpires.
+  ///
+  /// In ko, this message translates to:
+  /// **'유효 기간'**
+  String get inviteExpires;
+
+  /// No description provided for @inviteUsesValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회'**
+  String inviteUsesValue(int count);
+
+  /// No description provided for @inviteDaysValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}일'**
+  String inviteDaysValue(int count);
+
+  /// No description provided for @inviteEditorWarning.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크를 받은 누구나 일정을 수정할 수 있습니다.'**
+  String get inviteEditorWarning;
+
+  /// No description provided for @inviteShareNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크는 만들 때 한 번만 볼 수 있어요. 링크를 받은 사람은 참여하기 전에도 여행 제목과 날짜를 볼 수 있습니다.'**
+  String get inviteShareNotice;
+
+  /// No description provided for @inviteShareText.
+  ///
+  /// In ko, this message translates to:
+  /// **'Travel Copilot 여행에 초대합니다.\n{url}'**
+  String inviteShareText(String url);
+
+  /// No description provided for @invitesEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'만든 초대 링크가 없어요.'**
+  String get invitesEmpty;
+
+  /// No description provided for @inviteUsage.
+  ///
+  /// In ko, this message translates to:
+  /// **'{used}/{max}회 사용'**
+  String inviteUsage(int used, int max);
+
+  /// No description provided for @inviteExpiresAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date}까지'**
+  String inviteExpiresAt(String date);
+
+  /// No description provided for @inviteStatusActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 중'**
+  String get inviteStatusActive;
+
+  /// No description provided for @inviteStatusExpired.
+  ///
+  /// In ko, this message translates to:
+  /// **'만료됨'**
+  String get inviteStatusExpired;
+
+  /// No description provided for @inviteStatusRevoked.
+  ///
+  /// In ko, this message translates to:
+  /// **'폐기됨'**
+  String get inviteStatusRevoked;
+
+  /// No description provided for @inviteStatusExhausted.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 사용됨'**
+  String get inviteStatusExhausted;
+
+  /// No description provided for @inviteRevoke.
+  ///
+  /// In ko, this message translates to:
+  /// **'폐기'**
+  String get inviteRevoke;
+
+  /// No description provided for @inviteRevokeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 링크를 폐기할까요?'**
+  String get inviteRevokeTitle;
+
+  /// No description provided for @inviteRevokeBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'폐기하면 이 링크로 더 이상 참여할 수 없습니다.'**
+  String get inviteRevokeBody;
+
+  /// No description provided for @inviteShared.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크를 만들었어요. 지금 공유하지 않으면 다시 볼 수 없습니다.'**
+  String get inviteShared;
+
+  /// No description provided for @inviteJoinTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 참여'**
+  String get inviteJoinTitle;
+
+  /// No description provided for @inviteJoinBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{inviter}님이 \'{title}\'({period})에 {role} 멤버로 초대했습니다.'**
+  String inviteJoinBody(String inviter, String title, String period, String role);
+
+  /// No description provided for @inviteJoinBodyNoInviter.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{title}\'({period})에 {role} 멤버로 초대받았습니다.'**
+  String inviteJoinBodyNoInviter(String title, String period, String role);
+
+  /// No description provided for @inviteJoin.
+  ///
+  /// In ko, this message translates to:
+  /// **'참여'**
+  String get inviteJoin;
+
+  /// No description provided for @inviteGone.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 이상 쓸 수 없는 초대 링크입니다. 초대한 사람에게 새 링크를 요청하세요.'**
+  String get inviteGone;
+
+  /// No description provided for @inviteNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 링크를 찾을 수 없습니다. 링크를 다시 확인해주세요.'**
+  String get inviteNotFound;
+
+  /// No description provided for @inviteMemberLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 여행은 멤버가 가득 찼습니다.'**
+  String get inviteMemberLimit;
+
+  /// No description provided for @inviteLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 정보를 불러오지 못했습니다.'**
+  String get inviteLoadFailed;
+
+  /// No description provided for @inviteJoinByLink.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 링크로 참여'**
+  String get inviteJoinByLink;
+
+  /// No description provided for @invitePasteHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'받은 초대 링크를 붙여넣으세요'**
+  String get invitePasteHint;
+
+  /// No description provided for @inviteLinkInvalid.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 링크 형식이 아닙니다.'**
+  String get inviteLinkInvalid;
+
+  /// No description provided for @inviteNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get inviteNext;
+
+  /// No description provided for @removeRevokeInvites.
+  ///
+  /// In ko, this message translates to:
+  /// **'열린 초대 링크도 모두 폐기 ({count}개)'**
+  String removeRevokeInvites(int count);
+
+  /// No description provided for @errorNetwork.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결을 확인하고 다시 시도해주세요.'**
+  String get errorNetwork;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:travelcopilot/core/api/app_exception.dart';
+import 'package:travelcopilot/core/platform/maps_config.dart';
 import 'package:travelcopilot/core/state/provider_retry.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_api.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_models.dart';
@@ -49,6 +51,8 @@ void main() {
         itineraryApiProvider.overrideWithValue(itinerary),
         placesApiProvider.overrideWithValue(places),
         tripsApiProvider.overrideWithValue(trips),
+        // 테스트에는 지도 키가 없다 (실제 지도는 플랫폼 뷰라 위젯 테스트에서 그릴 수 없음)
+        mapsConfiguredProvider.overrideWith((ref) async => false),
       ],
     );
   });
@@ -155,6 +159,79 @@ void main() {
                   .single
               as List<ItineraryItem>;
       expect(sent.map((i) => i.id), ['b', 'a']);
+    });
+  });
+
+  group('F4 이동 구간·지도', () {
+    final items = [
+      makeItem(id: 'a', title: '오르세', placeId: 'p1', startTime: '10:00', stayMinutes: 60),
+      makeItem(id: 'b', title: '루브르', position: 1, placeId: 'p2', startTime: '11:00'),
+      makeItem(id: 'c', title: '점심', position: 2),
+    ];
+
+    DayView day(List<RouteLeg> legs) =>
+        DayView(date: DateTime(2026, 12, 21), items: items, legs: legs);
+
+    testWidgets('항목 사이에 이동시간·거리와 늦음 경고를 보여준다', (tester) async {
+      when(() => itinerary.day(any(), any())).thenAnswer(
+        (_) async => day(const [
+          RouteLeg(
+            fromItemId: 'a',
+            toItemId: 'b',
+            status: LegStatus.ok,
+            mode: TravelMode.transit,
+            durationSeconds: 1260,
+            distanceMeters: 3900,
+          ),
+          RouteLeg(fromItemId: 'b', toItemId: 'c', status: LegStatus.noLocation),
+        ]),
+      );
+      await pump(
+        tester,
+        ItineraryTab(
+          snapshot: snapshot(items: items),
+          today: DateTime(2026, 12, 21),
+        ),
+      );
+
+      // 10:00 + 60분 + 21분 = 11:21 → 11:00 시작이면 21분 늦음
+      expect(find.text('21분 · 3.9km  ⚠ 21분 늦음'), findsOneWidget);
+      expect(find.text('— 장소 없음'), findsOneWidget);
+    });
+
+    testWidgets('이동시간을 못 받으면 배너와 다시 시도', (tester) async {
+      when(() => itinerary.day(any(), any())).thenThrow(const NetworkException());
+      await pump(
+        tester,
+        ItineraryTab(
+          snapshot: snapshot(items: items),
+          today: DateTime(2026, 12, 21),
+        ),
+      );
+
+      expect(find.text('이동시간을 불러오지 못했습니다.'), findsOneWidget);
+      expect(find.text('오르세'), findsOneWidget); // 일정은 그대로
+      when(() => itinerary.day(any(), any())).thenAnswer((_) async => day(const []));
+      await tester.tap(find.text('다시 시도'));
+      await tester.pumpAndSettle();
+      expect(find.text('이동시간을 불러오지 못했습니다.'), findsNothing);
+    });
+
+    testWidgets('지도 키가 없으면 지도 대신 안내', (tester) async {
+      when(() => itinerary.day(any(), any())).thenAnswer((_) async => day(const []));
+      await pump(
+        tester,
+        ItineraryTab(
+          snapshot: snapshot(items: items),
+          today: DateTime(2026, 12, 21),
+        ),
+      );
+
+      await tester.tap(find.text('지도'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('지도를 사용할 수 없습니다.'), findsOneWidget);
+      expect(find.text('일정 추가'), findsNothing);
     });
   });
 

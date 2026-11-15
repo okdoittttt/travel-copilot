@@ -308,4 +308,157 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get itineraryChanged => '일정이 바뀌어 새로 불러왔습니다.';
+
+  @override
+  String get viewList => '목록';
+
+  @override
+  String get viewMap => '지도';
+
+  @override
+  String get legNoMode => '이동수단을 선택하세요';
+
+  @override
+  String get legNoLocation => '장소 없음';
+
+  @override
+  String get legUnavailable => '이동시간을 알 수 없어요';
+
+  @override
+  String legLate(int minutes) {
+    return '$minutes분 늦음';
+  }
+
+  @override
+  String get legsLoadFailed => '이동시간을 불러오지 못했습니다.';
+
+  @override
+  String get mapUnavailable => '지도를 사용할 수 없습니다.';
+
+  @override
+  String get mapNoPlaces => '지도에 표시할 장소가 없어요.';
+
+  @override
+  String get invitesTitle => '초대 링크';
+
+  @override
+  String get inviteNew => '새 링크';
+
+  @override
+  String get inviteCreate => '만들기';
+
+  @override
+  String get inviteRole => '역할';
+
+  @override
+  String get inviteMaxUses => '사용 횟수';
+
+  @override
+  String get inviteExpires => '유효 기간';
+
+  @override
+  String inviteUsesValue(int count) {
+    return '$count회';
+  }
+
+  @override
+  String inviteDaysValue(int count) {
+    return '$count일';
+  }
+
+  @override
+  String get inviteEditorWarning => '링크를 받은 누구나 일정을 수정할 수 있습니다.';
+
+  @override
+  String get inviteShareNotice => '링크는 만들 때 한 번만 볼 수 있어요. 링크를 받은 사람은 참여하기 전에도 여행 제목과 날짜를 볼 수 있습니다.';
+
+  @override
+  String inviteShareText(String url) {
+    return 'Travel Copilot 여행에 초대합니다.\n$url';
+  }
+
+  @override
+  String get invitesEmpty => '만든 초대 링크가 없어요.';
+
+  @override
+  String inviteUsage(int used, int max) {
+    return '$used/$max회 사용';
+  }
+
+  @override
+  String inviteExpiresAt(String date) {
+    return '$date까지';
+  }
+
+  @override
+  String get inviteStatusActive => '사용 중';
+
+  @override
+  String get inviteStatusExpired => '만료됨';
+
+  @override
+  String get inviteStatusRevoked => '폐기됨';
+
+  @override
+  String get inviteStatusExhausted => '모두 사용됨';
+
+  @override
+  String get inviteRevoke => '폐기';
+
+  @override
+  String get inviteRevokeTitle => '이 링크를 폐기할까요?';
+
+  @override
+  String get inviteRevokeBody => '폐기하면 이 링크로 더 이상 참여할 수 없습니다.';
+
+  @override
+  String get inviteShared => '링크를 만들었어요. 지금 공유하지 않으면 다시 볼 수 없습니다.';
+
+  @override
+  String get inviteJoinTitle => '초대 참여';
+
+  @override
+  String inviteJoinBody(String inviter, String title, String period, String role) {
+    return '$inviter님이 \'$title\'($period)에 $role 멤버로 초대했습니다.';
+  }
+
+  @override
+  String inviteJoinBodyNoInviter(String title, String period, String role) {
+    return '\'$title\'($period)에 $role 멤버로 초대받았습니다.';
+  }
+
+  @override
+  String get inviteJoin => '참여';
+
+  @override
+  String get inviteGone => '더 이상 쓸 수 없는 초대 링크입니다. 초대한 사람에게 새 링크를 요청하세요.';
+
+  @override
+  String get inviteNotFound => '초대 링크를 찾을 수 없습니다. 링크를 다시 확인해주세요.';
+
+  @override
+  String get inviteMemberLimit => '이 여행은 멤버가 가득 찼습니다.';
+
+  @override
+  String get inviteLoadFailed => '초대 정보를 불러오지 못했습니다.';
+
+  @override
+  String get inviteJoinByLink => '초대 링크로 참여';
+
+  @override
+  String get invitePasteHint => '받은 초대 링크를 붙여넣으세요';
+
+  @override
+  String get inviteLinkInvalid => '초대 링크 형식이 아닙니다.';
+
+  @override
+  String get inviteNext => '다음';
+
+  @override
+  String removeRevokeInvites(int count) {
+    return '열린 초대 링크도 모두 폐기 ($count개)';
+  }
+
+  @override
+  String get errorNetwork => '연결을 확인하고 다시 시도해주세요.';
 }
