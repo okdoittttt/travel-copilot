@@ -11,6 +11,10 @@ abstract final class AppConfig {
   /// Google iOS 클라이언트 ID. iOS에서 로그인 창을 띄울 때 필요. Android는 쓰지 않는다.
   static const googleIosClientId = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
 
+  /// 초대 링크 기본 주소. 서버의 `INVITE_BASE_URL`과 같아야 한다 (features/invites.md 5.7).
+  /// 붙여넣거나 열린 링크의 호스트가 이 값과 다르면 초대 링크로 보지 않는다.
+  static const inviteBaseUrl = String.fromEnvironment('INVITE_BASE_URL');
+
   /// 필수 설정이 빠졌거나 HTTPS가 아니면 앱 시작 시 바로 실패시킨다.
   static void validate() {
     final uri = Uri.tryParse(apiBaseUrl);
@@ -19,6 +23,9 @@ abstract final class AppConfig {
         'API_BASE_URL이 없거나 HTTPS가 아닙니다. '
         '--dart-define-from-file=env/local.json 으로 실행하세요.',
       );
+    }
+    if (Uri.tryParse(inviteBaseUrl)?.scheme != 'https') {
+      throw StateError('INVITE_BASE_URL이 없거나 HTTPS가 아닙니다. env/*.json을 확인하세요.');
     }
     if (googleServerClientId.isEmpty) {
       throw StateError('GOOGLE_SERVER_CLIENT_ID가 없습니다. env/*.json을 확인하세요.');

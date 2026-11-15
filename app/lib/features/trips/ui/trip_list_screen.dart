@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:travelcopilot/core/router/app_router.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
+import 'package:travelcopilot/features/invites/ui/invite_join_screen.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trip_rules.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
@@ -25,6 +26,12 @@ class TripListScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.tripsTitle),
         actions: [
+          IconButton(
+            key: const Key('join-by-link'),
+            tooltip: l10n.inviteJoinByLink,
+            icon: const Icon(Icons.group_add_outlined),
+            onPressed: () => joinByPastedLink(context, ref),
+          ),
           // 설정 화면(S17)은 F9. 그 전까지 로그아웃은 여기에 둔다
           TextButton(
             onPressed: () => ref.read(authControllerProvider.notifier).signOut(),

@@ -17,6 +17,8 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.okdoittttt.travelcopilot"
+        // 초대 링크 App Link 호스트 (features/invites.md 5.7). 도메인 준비 후 -PinviteHost=... 또는 gradle.properties
+        manifestPlaceholders["inviteHost"] = (project.findProperty("inviteHost") as String?) ?: "invite.invalid"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

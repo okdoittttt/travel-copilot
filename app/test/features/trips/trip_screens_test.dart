@@ -10,6 +10,8 @@ import 'package:travelcopilot/core/state/provider_retry.dart';
 import 'package:travelcopilot/features/auth/data/auth_models.dart';
 import 'package:travelcopilot/features/auth/data/auth_repository.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
+import 'package:travelcopilot/features/invites/data/invite_models.dart';
+import 'package:travelcopilot/features/invites/data/invites_api.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
 import 'package:travelcopilot/features/trips/ui/trip_detail_screen.dart';
@@ -23,10 +25,13 @@ class _MockTripsApi extends Mock implements TripsApi;
 
 class _MockAuthRepository extends Mock implements AuthRepository;
 
+class _MockInvitesApi extends Mock implements InvitesApi;
+
 const _me = AppUser(id: 'me', displayName: '나여행');
 
 void main() {
   late _MockTripsApi api;
+  late _MockInvitesApi invitesApi;
   late ProviderContainer container;
   late GoRouter router;
 
@@ -37,12 +42,15 @@ void main() {
 
   setUp(() {
     api = _MockTripsApi();
+    invitesApi = _MockInvitesApi();
+    when(() => invitesApi.list(any())).thenAnswer((_) async => []);
     final auth = _MockAuthRepository();
     when(auth.restoreSession).thenAnswer((_) async => _me);
     container = ProviderContainer(
       retry: disableAutoRetry,
       overrides: [
         tripsApiProvider.overrideWithValue(api),
+        invitesApiProvider.overrideWithValue(invitesApi),
         authRepositoryProvider.overrideWithValue(auth),
       ],
     );
@@ -199,6 +207,66 @@ void main() {
 
       verify(() => api.removeMember('t1', 'friend')).called(1);
       verify(() => api.snapshot('t1')).called(2);
+      // 열린 링크가 없으면 체크박스도, 전체 폐기 요청도 없다
+      verifyNever(() => invitesApi.revokeAll(any()));
+    });
+
+    Invite openInvite() => Invite(
+      id: 'i1',
+      role: InviteRole.viewer,
+      maxUses: 10,
+      useCount: 1,
+      expiresAt: DateTime.utc(2030),
+      createdAt: DateTime.utc(2026, 11, 15),
+      status: InviteStatus.active,
+    );
+
+    Future<void> openRemoveDialog(WidgetTester tester) async {
+      when(() => api.removeMember('t1', 'friend')).thenAnswer((_) async {});
+      when(() => invitesApi.list('t1')).thenAnswer((_) async => [openInvite()]);
+      when(() => invitesApi.revokeAll('t1')).thenAnswer((_) async => 1);
+      await openMembers(tester, TripRole.owner);
+      await tester.tap(find.byKey(const Key('member-menu-friend')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('내보내기'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('열린 초대 링크가 있으면 "모두 폐기"가 기본 선택되고 함께 폐기한다', (tester) async {
+      await openRemoveDialog(tester);
+
+      final checkbox = tester.widget<CheckboxListTile>(
+        find.byKey(const Key('revoke-invites-checkbox')),
+      );
+      expect(checkbox.value, isTrue);
+      expect(find.text('열린 초대 링크도 모두 폐기 (1개)'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, '내보내기'));
+      await tester.pumpAndSettle();
+
+      verify(() => api.removeMember('t1', 'friend')).called(1);
+      verify(() => invitesApi.revokeAll('t1')).called(1);
+    });
+
+    testWidgets('"모두 폐기"를 끄면 링크는 그대로 둔다', (tester) async {
+      await openRemoveDialog(tester);
+
+      await tester.tap(find.byKey(const Key('revoke-invites-checkbox')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, '내보내기'));
+      await tester.pumpAndSettle();
+
+      verify(() => api.removeMember('t1', 'friend')).called(1);
+      verifyNever(() => invitesApi.revokeAll(any()));
+    });
+
+    testWidgets('owner에게만 초대 링크 버튼이 있다', (tester) async {
+      await openMembers(tester, TripRole.owner);
+      expect(find.byKey(const Key('open-invites')), findsOneWidget);
+    });
+
+    testWidgets('editor에게는 초대 링크 버튼이 없다', (tester) async {
+      await openMembers(tester, TripRole.editor);
+      expect(find.byKey(const Key('open-invites')), findsNothing);
     });
   });
 

@@ -172,5 +172,115 @@
   },
   "legsLoadFailed": "이동시간을 불러오지 못했습니다.",
   "mapUnavailable": "지도를 사용할 수 없습니다.",
-  "mapNoPlaces": "지도에 표시할 장소가 없어요."
+  "mapNoPlaces": "지도에 표시할 장소가 없어요.",
+  "invitesTitle": "초대 링크",
+  "inviteNew": "새 링크",
+  "inviteCreate": "만들기",
+  "inviteRole": "역할",
+  "inviteMaxUses": "사용 횟수",
+  "inviteExpires": "유효 기간",
+  "inviteUsesValue": "{count}회",
+  "@inviteUsesValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteDaysValue": "{count}일",
+  "@inviteDaysValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteEditorWarning": "링크를 받은 누구나 일정을 수정할 수 있습니다.",
+  "inviteShareNotice": "링크는 만들 때 한 번만 볼 수 있어요. 링크를 받은 사람은 참여하기 전에도 여행 제목과 날짜를 볼 수 있습니다.",
+  "inviteShareText": "Travel Copilot 여행에 초대합니다.\n{url}",
+  "@inviteShareText": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "invitesEmpty": "만든 초대 링크가 없어요.",
+  "inviteUsage": "{used}/{max}회 사용",
+  "@inviteUsage": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteExpiresAt": "{date}까지",
+  "@inviteExpiresAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteStatusActive": "사용 중",
+  "inviteStatusExpired": "만료됨",
+  "inviteStatusRevoked": "폐기됨",
+  "inviteStatusExhausted": "모두 사용됨",
+  "inviteRevoke": "폐기",
+  "inviteRevokeTitle": "이 링크를 폐기할까요?",
+  "inviteRevokeBody": "폐기하면 이 링크로 더 이상 참여할 수 없습니다.",
+  "inviteShared": "링크를 만들었어요. 지금 공유하지 않으면 다시 볼 수 없습니다.",
+  "inviteJoinTitle": "초대 참여",
+  "inviteJoinBody": "{inviter}님이 '{title}'({period})에 {role} 멤버로 초대했습니다.",
+  "@inviteJoinBody": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteJoinBodyNoInviter": "'{title}'({period})에 {role} 멤버로 초대받았습니다.",
+  "@inviteJoinBodyNoInviter": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteJoin": "참여",
+  "inviteGone": "더 이상 쓸 수 없는 초대 링크입니다. 초대한 사람에게 새 링크를 요청하세요.",
+  "inviteNotFound": "초대 링크를 찾을 수 없습니다. 링크를 다시 확인해주세요.",
+  "inviteMemberLimit": "이 여행은 멤버가 가득 찼습니다.",
+  "inviteLoadFailed": "초대 정보를 불러오지 못했습니다.",
+  "inviteJoinByLink": "초대 링크로 참여",
+  "invitePasteHint": "받은 초대 링크를 붙여넣으세요",
+  "inviteLinkInvalid": "초대 링크 형식이 아닙니다.",
+  "inviteNext": "다음",
+  "removeRevokeInvites": "열린 초대 링크도 모두 폐기 ({count}개)",
+  "@removeRevokeInvites": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorNetwork": "연결을 확인하고 다시 시도해주세요."
 }

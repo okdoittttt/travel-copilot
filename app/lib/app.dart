@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travelcopilot/core/router/app_router.dart';
+import 'package:travelcopilot/features/invites/state/invite_links.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
 class App extends ConsumerWidget {
@@ -8,6 +9,8 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 초대 링크(Universal Link / App Link) 수신 시작
+    ref.watch(inviteLinkListenerProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: ThemeData(colorSchemeSeed: Colors.teal),
