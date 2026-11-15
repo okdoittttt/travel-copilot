@@ -60,6 +60,12 @@ class Settings(DatabaseSettings):
     # 하루 일정 조회(이동시간 계산, Google Routes 호출) 사용자별 시간당 (06-api 5절)
     day_view_per_hour: int = Field(default=120, ge=1)
 
+    # 미리보기·참여 합산 사용자별 분당 (06-api 5절, T10)
+    invite_redeem_per_minute: int = Field(default=10, ge=1)
+
+    # 초대 링크 기본 주소: `{값}/invite#<토큰>` (features/invites.md 5.2). 끝 `/` 없이
+    invite_base_url: str = "https://localhost"
+
     # 30일 지난 Google 좌표 정리 주기(초). 0이면 끈다 (테스트용) — features/routes-map.md 5.3
     location_cleanup_interval_seconds: int = Field(default=6 * 3600, ge=0)
 
@@ -68,6 +74,15 @@ class Settings(DatabaseSettings):
     def _check_jwt_secret_length(cls, value: SecretStr) -> SecretStr:
         if len(value.get_secret_value()) < MIN_JWT_SECRET_LENGTH:
             msg = f"JWT_SECRET은 {MIN_JWT_SECRET_LENGTH}자 이상이어야 합니다"
+            raise ValueError(msg)
+        return value
+
+    @field_validator("invite_base_url")
+    @classmethod
+    def _check_invite_base_url(cls, value: str) -> str:
+        value = value.rstrip("/")
+        if not value.startswith("https://") or any(c in value for c in "?#"):
+            msg = "INVITE_BASE_URL은 쿼리·fragment 없는 https:// 주소여야 합니다"
             raise ValueError(msg)
         return value
 

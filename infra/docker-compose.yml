@@ -14,6 +14,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+      # 초대 안내 페이지(W01)와 앱 링크 확인 파일 (features/invites.md 5.8)
+      - ./web:/etc/nginx/web:ro
     networks:
       backend:
         # 서버가 X-Forwarded-* 헤더를 믿는 유일한 주소 (server의 FORWARDED_ALLOW_IPS)
@@ -34,6 +36,8 @@ services:
       GOOGLE_ALLOWED_AZP: ${GOOGLE_ALLOWED_AZP:-}
       # 비어 있으면 장소 API만 503 (features/itinerary.md 5.8)
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      # 초대 링크 기본 주소 (features/invites.md 5.2)
+      INVITE_BASE_URL: ${INVITE_BASE_URL:-https://localhost}
     # 외부 포트 없음: Nginx를 거쳐서만 접근
     expose:
       - "8000"

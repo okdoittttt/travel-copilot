@@ -309,3 +309,19 @@ def google_routes(google_places: respx.MockRouter) -> respx.MockRouter:
         json={"routes": [{"duration": "1260s", "distanceMeters": 3900}]}
     )
     return google_places
+
+
+# --- 초대 도우미 --------------------------------------------------------------
+
+
+async def create_invite(
+    client: AsyncClient, owner: SeededUser, trip_id: str, **body: Any
+) -> dict[str, Any]:
+    """API로 초대 링크를 만들고 응답 본문을 돌려준다. 토큰은 `token` 키로 같이 넣어 준다."""
+    response = await client.post(
+        f"/api/v1/trips/{trip_id}/invites", json=body, headers=owner.headers
+    )
+    assert response.status_code == 201, response.text
+    invite: dict[str, Any] = response.json()
+    invite["token"] = invite["url"].split("#", 1)[1]
+    return invite

@@ -9,6 +9,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import travel_copilot.auth.models
+import travel_copilot.invites.models
 import travel_copilot.itinerary.models
 import travel_copilot.trips.models
 import travel_copilot.users.models  # noqa: F401  # 테이블 등록용 import

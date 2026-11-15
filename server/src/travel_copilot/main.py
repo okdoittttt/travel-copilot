@@ -18,6 +18,7 @@ from travel_copilot.core.middleware import NoStoreMiddleware, RequestContextMidd
 from travel_copilot.core.rate_limit import SlidingWindowRateLimiter
 from travel_copilot.directions.client import GoogleRoutesClient
 from travel_copilot.health.router import router as health_router
+from travel_copilot.invites.router import router as invites_router
 from travel_copilot.itinerary.router import router as itinerary_router
 from travel_copilot.jobs.expire_locations import run_periodically
 from travel_copilot.places.cache import LocationCache
@@ -29,7 +30,15 @@ from travel_copilot.users.router import router as users_router
 API_PREFIX = "/api/v1"
 
 # 앱에 등록하는 라우터. 보안 테스트(라우트 전수 검사)도 이 목록을 쓴다
-ROUTERS = (health_router, auth_router, users_router, trips_router, itinerary_router, places_router)
+ROUTERS = (
+    health_router,
+    auth_router,
+    users_router,
+    trips_router,
+    itinerary_router,
+    places_router,
+    invites_router,
+)
 
 # 외부 HTTP 호출 타임아웃 (08-conventions S5)
 HTTP_TIMEOUT = httpx.Timeout(10.0, connect=3.0)
