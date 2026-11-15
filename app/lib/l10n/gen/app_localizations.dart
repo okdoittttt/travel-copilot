@@ -655,6 +655,60 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'일정이 바뀌어 새로 불러왔습니다.'**
   String get itineraryChanged;
+
+  /// No description provided for @viewList.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록'**
+  String get viewList;
+
+  /// No description provided for @viewMap.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도'**
+  String get viewMap;
+
+  /// No description provided for @legNoMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동수단을 선택하세요'**
+  String get legNoMode;
+
+  /// No description provided for @legNoLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 없음'**
+  String get legNoLocation;
+
+  /// No description provided for @legUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동시간을 알 수 없어요'**
+  String get legUnavailable;
+
+  /// No description provided for @legLate.
+  ///
+  /// In ko, this message translates to:
+  /// **'{minutes}분 늦음'**
+  String legLate(int minutes);
+
+  /// No description provided for @legsLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동시간을 불러오지 못했습니다.'**
+  String get legsLoadFailed;
+
+  /// No description provided for @mapUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도를 사용할 수 없습니다.'**
+  String get mapUnavailable;
+
+  /// No description provided for @mapNoPlaces.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도에 표시할 장소가 없어요.'**
+  String get mapNoPlaces;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

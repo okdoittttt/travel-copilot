@@ -308,4 +308,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get itineraryChanged => '일정이 바뀌어 새로 불러왔습니다.';
+
+  @override
+  String get viewList => '목록';
+
+  @override
+  String get viewMap => '지도';
+
+  @override
+  String get legNoMode => '이동수단을 선택하세요';
+
+  @override
+  String get legNoLocation => '장소 없음';
+
+  @override
+  String get legUnavailable => '이동시간을 알 수 없어요';
+
+  @override
+  String legLate(int minutes) {
+    return '$minutes분 늦음';
+  }
+
+  @override
+  String get legsLoadFailed => '이동시간을 불러오지 못했습니다.';
+
+  @override
+  String get mapUnavailable => '지도를 사용할 수 없습니다.';
+
+  @override
+  String get mapNoPlaces => '지도에 표시할 장소가 없어요.';
 }

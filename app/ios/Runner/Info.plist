@@ -22,6 +22,9 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<!-- 지도 키: ios/Flutter/Secrets.xcconfig 값이 빌드 때 들어간다 (git 제외) -->
+	<key>GMSApiKey</key>
+	<string>$(GOOGLE_MAPS_IOS_KEY)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

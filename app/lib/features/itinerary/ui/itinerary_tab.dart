@@ -6,6 +6,9 @@ import 'package:travelcopilot/core/router/app_router.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_api.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_models.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_rules.dart';
+import 'package:travelcopilot/features/itinerary/state/day_view_provider.dart';
+import 'package:travelcopilot/features/itinerary/ui/day_map_view.dart';
+import 'package:travelcopilot/features/itinerary/ui/leg_row.dart';
 import 'package:travelcopilot/features/places/ui/place_sheet.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
@@ -15,7 +18,8 @@ import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 /// S06 일정 (여행 상세의 일정 탭). 위: 날짜 목록, 아래: 그날 항목.
 ///
 /// owner·editor는 추가, 길게 눌러 순서 변경, 밀어서 삭제. viewer는 보기만.
-/// 이동시간(이동 구간)은 F4에서 추가한다.
+/// 항목 사이에는 이동 구간(서버가 Google Routes로 계산, 저장 안 함)과 시각 불일치 경고를 보여준다.
+/// 위의 [목록 | 지도]로 S07 지도와 전환한다.
 class ItineraryTab extends ConsumerStatefulWidget {
   const new({required this.snapshot, super.key, this.today});
 
@@ -33,6 +37,7 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
 
   /// 순서 변경을 서버에 보내는 동안 화면에 먼저 보여줄 순서.
   List<ItineraryItem>? _pendingOrder;
+  bool _showMap = false;
 
   Trip get _trip => widget.snapshot.trip;
 
@@ -57,7 +62,13 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
       setState(() => _pendingOrder = null);
       handleTripError(context, ref, error, tripId: _trip.id);
     }
-    ref.invalidate(tripSnapshotProvider(_trip.id));
+    _refresh();
+  }
+
+  void _refresh() {
+    ref
+      ..invalidate(tripSnapshotProvider(_trip.id))
+      ..invalidate(dayViewProvider);
   }
 
   Future<bool> _delete(ItineraryItem item) async {
@@ -80,7 +91,7 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
     if (confirmed != true || !mounted) return false;
     try {
       await ref.read(itineraryApiProvider).delete(_trip.id, item.id, item.version);
-      ref.invalidate(tripSnapshotProvider(_trip.id));
+      _refresh();
       return true;
     } on AppException catch (error) {
       if (mounted) handleTripError(context, ref, error, tripId: _trip.id);
@@ -93,6 +104,27 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
     final l10n = AppLocalizations.of(context);
     final canEdit = _trip.myRole.canEditTrip;
     final items = _pendingOrder ?? itemsOfDay(widget.snapshot.items, _day);
+    final dayView = ref.watch(dayViewProvider(_trip.id, _day));
+    // 화면의 순서와 맞는 구간만 쓴다 (순서 변경 직후 서버 응답이 오기 전 등)
+    final legsByPair = {
+      for (final leg in dayView.value?.legs ?? const <RouteLeg>[])
+        (leg.fromItemId, leg.toItemId): leg,
+    };
+    Widget tile(int index) {
+      final item = items[index];
+      if (index == 0) return _ItemTile(trip: _trip, item: item);
+      final previous = items[index - 1];
+      final leg = legsByPair[(previous.id, item.id)];
+      final failed = dayView.hasError && !dayView.isLoading;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!failed)
+            LegRow(leg: leg, lateMinutes: leg == null ? null : lateMinutes(previous, item, leg)),
+          _ItemTile(trip: _trip, item: item),
+        ],
+      );
+    }
 
     return Column(
       children: [
@@ -117,50 +149,81 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
             ],
           ),
         ),
-        const Divider(height: 1),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => ref.refresh(tripSnapshotProvider(_trip.id).future),
-            child: items.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      const SizedBox(height: 120),
-                      Text(l10n.itineraryEmpty, textAlign: TextAlign.center),
-                    ],
-                  )
-                : canEdit
-                ? ReorderableListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 96),
-                    onReorderItem: (from, to) => _reorder(items, from, to),
-                    children: [
-                      for (final item in items)
-                        Dismissible(
-                          key: ValueKey(item.id),
-                          direction: DismissDirection.endToStart,
-                          background: ColoredBox(
-                            color: Theme.of(context).colorScheme.errorContainer,
-                            child: const Align(
-                              alignment: Alignment.centerRight,
-                              child: Padding(
-                                padding: EdgeInsets.only(right: 24),
-                                child: Icon(Icons.delete_outline),
-                              ),
-                            ),
-                          ),
-                          confirmDismiss: (_) => _delete(item),
-                          child: _ItemTile(trip: _trip, item: item),
-                        ),
-                    ],
-                  )
-                : ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [for (final item in items) _ItemTile(trip: _trip, item: item)],
-                  ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(value: false, label: Text(l10n.viewList), icon: const Icon(Icons.list)),
+              ButtonSegment(
+                value: true,
+                label: Text(l10n.viewMap),
+                icon: const Icon(Icons.map_outlined),
+              ),
+            ],
+            selected: {_showMap},
+            onSelectionChanged: (value) => setState(() => _showMap = value.first),
           ),
         ),
-        if (canEdit && items.length < ItineraryRules.maxItemsPerDay)
+        const Divider(height: 1),
+        if (dayView.hasError && !dayView.isLoading && items.length > 1)
+          MaterialBanner(
+            content: Text(l10n.legsLoadFailed),
+            actions: [
+              TextButton(
+                onPressed: () => ref.invalidate(dayViewProvider(_trip.id, _day)),
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        if (_showMap)
+          Expanded(child: DayMapView(items: dayView.value?.items ?? const []))
+        else
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () {
+                ref.invalidate(dayViewProvider(_trip.id, _day));
+                return ref.refresh(tripSnapshotProvider(_trip.id).future);
+              },
+              child: items.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 120),
+                        Text(l10n.itineraryEmpty, textAlign: TextAlign.center),
+                      ],
+                    )
+                  : canEdit
+                  ? ReorderableListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 96),
+                      onReorderItem: (from, to) => _reorder(items, from, to),
+                      children: [
+                        for (final (index, item) in items.indexed)
+                          Dismissible(
+                            key: ValueKey(item.id),
+                            direction: DismissDirection.endToStart,
+                            background: ColoredBox(
+                              color: Theme.of(context).colorScheme.errorContainer,
+                              child: const Align(
+                                alignment: Alignment.centerRight,
+                                child: Padding(
+                                  padding: EdgeInsets.only(right: 24),
+                                  child: Icon(Icons.delete_outline),
+                                ),
+                              ),
+                            ),
+                            confirmDismiss: (_) => _delete(item),
+                            child: tile(index),
+                          ),
+                      ],
+                    )
+                  : ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [for (var i = 0; i < items.length; i++) tile(i)],
+                    ),
+            ),
+          ),
+        if (canEdit && !_showMap && items.length < ItineraryRules.maxItemsPerDay)
           Padding(
             padding: const EdgeInsets.all(12),
             child: FilledButton.tonalIcon(

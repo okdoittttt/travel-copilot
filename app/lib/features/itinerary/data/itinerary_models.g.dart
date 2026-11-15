@@ -75,3 +75,44 @@ Map<String, dynamic> _$ItemDraftToJson(_ItemDraft instance) => <String, dynamic>
   'stay_minutes': instance.stayMinutes,
   'travel_mode': _$TravelModeEnumMap[instance.travelMode],
 };
+
+_RouteLeg _$RouteLegFromJson(Map<String, dynamic> json) => _RouteLeg(
+  fromItemId: json['from_item_id'] as String,
+  toItemId: json['to_item_id'] as String,
+  status: $enumDecode(_$LegStatusEnumMap, json['status']),
+  mode: $enumDecodeNullable(_$TravelModeEnumMap, json['mode']),
+  durationSeconds: (json['duration_seconds'] as num?)?.toInt(),
+  distanceMeters: (json['distance_meters'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$RouteLegToJson(_RouteLeg instance) => <String, dynamic>{
+  'from_item_id': instance.fromItemId,
+  'to_item_id': instance.toItemId,
+  'status': _$LegStatusEnumMap[instance.status]!,
+  'mode': _$TravelModeEnumMap[instance.mode],
+  'duration_seconds': instance.durationSeconds,
+  'distance_meters': instance.distanceMeters,
+};
+
+const _$LegStatusEnumMap = {
+  LegStatus.ok: 'ok',
+  LegStatus.noLocation: 'no_location',
+  LegStatus.noMode: 'no_mode',
+  LegStatus.unavailable: 'unavailable',
+};
+
+_DayView _$DayViewFromJson(Map<String, dynamic> json) => _DayView(
+  date: const DateOnlyConverter().fromJson(json['date'] as String),
+  items: (json['items'] as List<dynamic>)
+      .map((e) => ItineraryItem.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  legs: (json['legs'] as List<dynamic>)
+      .map((e) => RouteLeg.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
+
+Map<String, dynamic> _$DayViewToJson(_DayView instance) => <String, dynamic>{
+  'date': const DateOnlyConverter().toJson(instance.date),
+  'items': instance.items,
+  'legs': instance.legs,
+};

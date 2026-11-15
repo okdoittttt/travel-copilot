@@ -50,3 +50,33 @@ String formatStay(int minutes) {
 /// TimeOfDay 대신 서버 형식 "HH:MM" 문자열로 다룬다.
 String formatHhMm(int hour, int minute) =>
     '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+int _minutesOf(String hhmm) {
+  final parts = hhmm.split(':');
+  return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+}
+
+/// 계획 시각으로는 몇 분 늦는지 (features/routes-map.md 5.6). 늦지 않거나 계산할 수 없으면 null.
+///
+/// 앞 시작 + 앞 머무는 시간 + 이동시간 > 다음 시작이면 그 차이. 자정을 넘기는 일정은 경고하지 않는다.
+int? lateMinutes(ItineraryItem from, ItineraryItem to, RouteLeg leg) {
+  final fromTime = from.startTime;
+  final toTime = to.startTime;
+  final duration = leg.durationSeconds;
+  if (leg.status != LegStatus.ok || fromTime == null || toTime == null || duration == null) {
+    return null;
+  }
+  final start = _minutesOf(fromTime);
+  final next = _minutesOf(toTime);
+  if (next < start) return null;
+  final arrival = start + (from.stayMinutes ?? 0) + (duration / 60).ceil();
+  final late = arrival - next;
+  return late > 0 ? late : null;
+}
+
+/// 이동시간 표시: "21분", "1시간 5분". 초는 올려서 분으로.
+String formatDuration(int seconds) => formatStay((seconds / 60).ceil());
+
+/// 거리 표시: "850m", "3.9km".
+String formatDistance(int meters) =>
+    meters < 1000 ? '${meters}m' : '${(meters / 1000).toStringAsFixed(1)}km';

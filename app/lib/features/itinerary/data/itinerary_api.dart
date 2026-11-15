@@ -38,6 +38,14 @@ class ItineraryApi {
     await _dio.delete<void>('/trips/$tripId/items/$itemId', queryParameters: {'version': version});
   });
 
+  /// 하루 일정 + 이동 구간. 이동시간은 서버가 요청마다 계산한다 (저장 안 함).
+  Future<DayView> day(String tripId, DateTime day) => _call(() async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/trips/$tripId/days/${formatDateOnly(day)}',
+    );
+    return DayView.fromJson(response.data!);
+  });
+
   /// 그날의 모든 항목을 새 순서대로 보낸다.
   Future<DayItems> reorder(String tripId, DateTime day, List<ItineraryItem> ordered) =>
       _call(() async {

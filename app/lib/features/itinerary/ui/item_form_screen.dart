@@ -5,6 +5,7 @@ import 'package:travelcopilot/core/api/app_exception.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_api.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_models.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_rules.dart';
+import 'package:travelcopilot/features/itinerary/state/day_view_provider.dart';
 import 'package:travelcopilot/features/places/data/place_models.dart';
 import 'package:travelcopilot/features/places/ui/place_search_screen.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
@@ -199,7 +200,9 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
   }
 
   void _done() {
-    ref.invalidate(tripSnapshotProvider(_trip.id));
+    ref
+      ..invalidate(tripSnapshotProvider(_trip.id))
+      ..invalidate(dayViewProvider);
     if (mounted) context.pop();
   }
 
