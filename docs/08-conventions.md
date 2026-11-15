@@ -212,13 +212,9 @@ security/ 에이전트가 점검할 때 기준으로 쓰는 목록. 위반하면
 
 ### 6.1 브랜치
 
-| 접두어 | 용도 | 예 |
-|---|---|---|
-| `feat/` | 기능 | `feat/auth-social-login` |
-| `fix/` | 버그 수정 | `fix/invite-race-condition` |
-| `docs/` | 문서만 | `docs/design` |
-| `chore/` | 설정·도구·의존성 | `chore/ci-setup` |
-| `refactor/` | 동작 변경 없는 구조 개선 | `refactor/trip-service` |
+- 작업 브랜치는 **`feat/trips` 하나를 계속 쓴다** (2026-11-10 결정). 기능·수정·문서 모두 여기서 작업하고, 새 브랜치는 개발자가 요청할 때만 만든다
+- 기능 하나가 끝날 때마다 `feat/trips` → `main` PR
+- F1까지 쓴 브랜치(`docs/design`, `chore/foundation`, `feat/auth`)는 머지가 끝난 기록용이다
 
 ### 6.2 커밋 메시지
 
@@ -233,7 +229,7 @@ feat(trips): 여행 스냅샷 조회 API 추가
 
 - 접두어: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `security`
 - 범위(괄호): `auth`, `trips`, `itinerary`, `places`, `invites`, `vouchers`, `app`, `server`, `infra`
-- 커밋 하나 = 의미 있는 변경 하나. "WIP" 커밋은 squash 머지로 정리
+- 커밋 하나 = 의미 있는 변경 하나. "WIP" 커밋은 만들지 않는다 (squash 머지를 쓰지 않으므로 커밋이 그대로 main에 남음)
 
 ### 6.3 PR
 
@@ -256,7 +252,7 @@ feat(trips): 여행 스냅샷 조회 API 추가
 ## 스크린샷 (화면 변경 시)
 ```
 
-- 머지: squash 머지, 머지 후 브랜치 삭제
+- 머지: merge commit (squash 금지), 머지 후 브랜치를 지우지 않는다
 
 ## 7. CI (GitHub Actions)
 
