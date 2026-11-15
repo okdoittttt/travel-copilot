@@ -5,6 +5,8 @@ import 'package:travelcopilot/features/auth/data/auth_models.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
 import 'package:travelcopilot/features/auth/ui/login_screen.dart';
 import 'package:travelcopilot/features/auth/ui/splash_screen.dart';
+import 'package:travelcopilot/features/itinerary/ui/item_form_screen.dart';
+import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/ui/trip_detail_screen.dart';
 import 'package:travelcopilot/features/trips/ui/trip_form_screen.dart';
 import 'package:travelcopilot/features/trips/ui/trip_list_screen.dart';
@@ -18,6 +20,9 @@ abstract final class Routes {
   static const newTrip = '/trips/new';
   static String trip(String id) => '/trips/$id';
   static String editTrip(String id) => '/trips/$id/edit';
+  static String newItem(String tripId, DateTime day) =>
+      '/trips/$tripId/items/new?day=${formatDateOnly(day)}';
+  static String item(String tripId, String itemId) => '/trips/$tripId/items/$itemId';
 }
 
 /// 로그인 상태에 따라 화면을 정한다.
@@ -63,6 +68,21 @@ GoRouter appRouter(Ref ref) {
                 path: 'edit',
                 builder: (context, state) =>
                     TripEditScreen(tripId: state.pathParameters['tripId']!),
+              ),
+              // 'items/new'가 'items/:itemId'보다 먼저 와야 한다
+              GoRoute(
+                path: 'items/new',
+                builder: (context, state) => ItemFormRoute(
+                  tripId: state.pathParameters['tripId']!,
+                  day: DateTime.tryParse(state.uri.queryParameters['day'] ?? ''),
+                ),
+              ),
+              GoRoute(
+                path: 'items/:itemId',
+                builder: (context, state) => ItemFormRoute(
+                  tripId: state.pathParameters['tripId']!,
+                  itemId: state.pathParameters['itemId'],
+                ),
               ),
             ],
           ),

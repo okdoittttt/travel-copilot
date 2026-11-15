@@ -368,12 +368,6 @@ abstract class AppLocalizations {
   /// **'멤버'**
   String get tabMembers;
 
-  /// No description provided for @itineraryComingSoon.
-  ///
-  /// In ko, this message translates to:
-  /// **'일정은 곧 추가됩니다.'**
-  String get itineraryComingSoon;
-
   /// No description provided for @vouchersComingSoon.
   ///
   /// In ko, this message translates to:
@@ -469,6 +463,198 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'내보낸 멤버의 기기에 남아 있던 여행 정보는 그 기기가 다음에 동기화할 때 지워져요.'**
   String get ownerMemberNotice;
+
+  /// No description provided for @itineraryEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 날은 아직 일정이 없어요.'**
+  String get itineraryEmpty;
+
+  /// No description provided for @itineraryAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정 추가'**
+  String get itineraryAdd;
+
+  /// No description provided for @itemNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정 추가'**
+  String get itemNew;
+
+  /// No description provided for @itemEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정 수정'**
+  String get itemEdit;
+
+  /// No description provided for @itemView.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정'**
+  String get itemView;
+
+  /// No description provided for @fieldItemTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목'**
+  String get fieldItemTitle;
+
+  /// No description provided for @fieldPlace.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소'**
+  String get fieldPlace;
+
+  /// No description provided for @fieldPlaceHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 선택 (선택)'**
+  String get fieldPlaceHint;
+
+  /// No description provided for @fieldDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'날짜'**
+  String get fieldDay;
+
+  /// No description provided for @fieldStartTime.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작 시각'**
+  String get fieldStartTime;
+
+  /// No description provided for @fieldStay.
+  ///
+  /// In ko, this message translates to:
+  /// **'머무는 시간'**
+  String get fieldStay;
+
+  /// No description provided for @fieldTravelMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 일정에서 이동'**
+  String get fieldTravelMode;
+
+  /// No description provided for @fieldMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get fieldMemo;
+
+  /// No description provided for @none.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get none;
+
+  /// No description provided for @placeRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 빼기'**
+  String get placeRemove;
+
+  /// No description provided for @googleNameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'Google 장소 이름: {name}'**
+  String googleNameHint(String name);
+
+  /// No description provided for @useThisName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 이름 사용'**
+  String get useThisName;
+
+  /// No description provided for @travelDrive.
+  ///
+  /// In ko, this message translates to:
+  /// **'차량'**
+  String get travelDrive;
+
+  /// No description provided for @travelTransit.
+  ///
+  /// In ko, this message translates to:
+  /// **'대중교통'**
+  String get travelTransit;
+
+  /// No description provided for @travelWalk.
+  ///
+  /// In ko, this message translates to:
+  /// **'도보'**
+  String get travelWalk;
+
+  /// No description provided for @errorMemoTooLong.
+  ///
+  /// In ko, this message translates to:
+  /// **'1,000자 이하로 입력해주세요'**
+  String get errorMemoTooLong;
+
+  /// No description provided for @itemDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정을 삭제할까요?'**
+  String get itemDeleteTitle;
+
+  /// No description provided for @itemDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{title}\" 일정이 삭제됩니다.'**
+  String itemDeleteBody(String title);
+
+  /// No description provided for @delete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get delete;
+
+  /// No description provided for @placeSearchTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 검색'**
+  String get placeSearchTitle;
+
+  /// No description provided for @placeSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 이름이나 주소 (2글자 이상)'**
+  String get placeSearchHint;
+
+  /// No description provided for @placeSearchEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과가 없어요.'**
+  String get placeSearchEmpty;
+
+  /// No description provided for @placesUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 검색을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.'**
+  String get placesUnavailable;
+
+  /// No description provided for @rateLimited.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠시 후 다시 시도해주세요.'**
+  String get rateLimited;
+
+  /// No description provided for @placeOpenInMaps.
+  ///
+  /// In ko, this message translates to:
+  /// **'Google 지도에서 열기'**
+  String get placeOpenInMaps;
+
+  /// No description provided for @placeLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 정보를 불러오지 못했습니다.'**
+  String get placeLoadFailed;
+
+  /// No description provided for @itineraryChanged.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정이 바뀌어 새로 불러왔습니다.'**
+  String get itineraryChanged;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

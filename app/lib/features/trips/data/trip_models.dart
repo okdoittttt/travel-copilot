@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:travelcopilot/features/itinerary/data/itinerary_models.dart';
 
 part 'trip_models.freezed.dart';
 part 'trip_models.g.dart';
@@ -71,10 +72,14 @@ abstract class TripMember with _$TripMember {
   factory fromJson(Map<String, dynamic> json) => _$TripMemberFromJson(json);
 }
 
-/// 여행 스냅샷. F3에서 일정, F7에서 바우처가 추가된다.
+/// 여행 스냅샷: 여행 정보 + 멤버 + 전체 일정. F7에서 바우처가 추가된다.
 @freezed
 abstract class TripSnapshot with _$TripSnapshot {
-  const factory({required Trip trip, required List<TripMember> members}) = _TripSnapshot;
+  const factory({
+    required Trip trip,
+    required List<TripMember> members,
+    @Default(<ItineraryItem>[]) List<ItineraryItem> items,
+  }) = _TripSnapshot;
 
   factory fromJson(Map<String, dynamic> json) => _$TripSnapshotFromJson(json);
 }

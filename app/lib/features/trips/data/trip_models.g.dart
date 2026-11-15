@@ -57,11 +57,17 @@ _TripSnapshot _$TripSnapshotFromJson(Map<String, dynamic> json) => _TripSnapshot
   members: (json['members'] as List<dynamic>)
       .map((e) => TripMember.fromJson(e as Map<String, dynamic>))
       .toList(),
+  items:
+      (json['items'] as List<dynamic>?)
+          ?.map((e) => ItineraryItem.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <ItineraryItem>[],
 );
 
 Map<String, dynamic> _$TripSnapshotToJson(_TripSnapshot instance) => <String, dynamic>{
   'trip': instance.trip,
   'members': instance.members,
+  'items': instance.items,
 };
 
 _TripDraft _$TripDraftFromJson(Map<String, dynamic> json) => _TripDraft(

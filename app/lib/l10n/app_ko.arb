@@ -60,7 +60,6 @@
   "tabItinerary": "일정",
   "tabVouchers": "바우처",
   "tabMembers": "멤버",
-  "itineraryComingSoon": "일정은 곧 추가됩니다.",
   "vouchersComingSoon": "바우처는 곧 추가됩니다.",
   "deleteTitle": "여행을 삭제할까요?",
   "deleteBody": "멤버 모두에게서 이 여행이 사라지고 되돌릴 수 없어요. 확인을 위해 여행 제목 \"{title}\"을 입력해주세요.",
@@ -111,5 +110,51 @@
     }
   },
   "removeBody": "이 멤버가 올린 바우처도 함께 삭제됩니다.",
-  "ownerMemberNotice": "내보낸 멤버의 기기에 남아 있던 여행 정보는 그 기기가 다음에 동기화할 때 지워져요."
+  "ownerMemberNotice": "내보낸 멤버의 기기에 남아 있던 여행 정보는 그 기기가 다음에 동기화할 때 지워져요.",
+  "itineraryEmpty": "이 날은 아직 일정이 없어요.",
+  "itineraryAdd": "일정 추가",
+  "itemNew": "일정 추가",
+  "itemEdit": "일정 수정",
+  "itemView": "일정",
+  "fieldItemTitle": "제목",
+  "fieldPlace": "장소",
+  "fieldPlaceHint": "장소 선택 (선택)",
+  "fieldDay": "날짜",
+  "fieldStartTime": "시작 시각",
+  "fieldStay": "머무는 시간",
+  "fieldTravelMode": "이전 일정에서 이동",
+  "fieldMemo": "메모",
+  "none": "없음",
+  "placeRemove": "장소 빼기",
+  "googleNameHint": "Google 장소 이름: {name}",
+  "@googleNameHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "useThisName": "이 이름 사용",
+  "travelDrive": "차량",
+  "travelTransit": "대중교통",
+  "travelWalk": "도보",
+  "errorMemoTooLong": "1,000자 이하로 입력해주세요",
+  "itemDeleteTitle": "일정을 삭제할까요?",
+  "itemDeleteBody": "\"{title}\" 일정이 삭제됩니다.",
+  "@itemDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "delete": "삭제",
+  "placeSearchTitle": "장소 검색",
+  "placeSearchHint": "장소 이름이나 주소 (2글자 이상)",
+  "placeSearchEmpty": "검색 결과가 없어요.",
+  "placesUnavailable": "장소 검색을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.",
+  "rateLimited": "잠시 후 다시 시도해주세요.",
+  "placeOpenInMaps": "Google 지도에서 열기",
+  "placeLoadFailed": "장소 정보를 불러오지 못했습니다.",
+  "itineraryChanged": "일정이 바뀌어 새로 불러왔습니다."
 }
