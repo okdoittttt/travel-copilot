@@ -40,7 +40,7 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 | 401 | 인증 없음·만료 | `token_missing`, `token_expired`, `token_invalid` |
 | 403 | 멤버지만 권한 부족 | `forbidden` |
 | 404 | 없음 **또는 비멤버** (여행 존재 여부도 숨김) | `not_found` |
-| 409 | 동시 수정 충돌, 상태 충돌 | `version_conflict`, `already_member`, `owner_cannot_leave`, `owner_role_locked`, `order_mismatch`, `day_item_limit`, `trip_period_conflict` |
+| 409 | 동시 수정 충돌, 상태 충돌 | `version_conflict`, `already_member`, `owner_cannot_leave`, `owner_role_locked`, `order_mismatch`, `day_item_limit`, `trip_period_conflict`, `invite_limit`, `trip_member_limit` |
 | 410 | 초대 링크 만료·폐기·횟수 소진 | `invite_expired`, `invite_revoked`, `invite_exhausted` |
 | 413 | 파일·요청 크기 초과 | `payload_too_large` |
 | 415 | 허용하지 않는 파일 형식 | `unsupported_file_type` |
@@ -166,15 +166,17 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 |---|---|---|---|
 | POST | `/trips/{trip_id}/invites` | O | 링크 만들기 `{ "role", "max_uses", "expires_in_days" }` → `{ "id", "url", "expires_at" }`. **토큰 원문은 이 응답에서 한 번만** 나온다 |
 | GET | `/trips/{trip_id}/invites` | O | 링크 목록 (토큰 없음: 역할, 사용 횟수, 만료, 폐기 여부) |
-| DELETE | `/trips/{trip_id}/invites/{invite_id}` | O | 링크 폐기 |
-| POST | `/invites/preview` | 👤 | `{ "token" }` → 참여 확인 화면용 정보: 여행 제목, 초대한 사람 이름, 받을 역할, 기간. 그 외 정보 없음 |
-| POST | `/invites/accept` | 👤 | `{ "token" }` → 멤버로 추가, `{ "trip_id" }`. 이미 멤버면 `409 already_member` |
+| DELETE | `/trips/{trip_id}/invites/{invite_id}` | O | 링크 폐기 (이미 끝난 링크도 204) |
+| POST | `/trips/{trip_id}/invites/revoke-all` | O | 열린 링크 모두 폐기 → `{ "revoked": N }`. 멤버를 내보낼 때 함께 쓴다 (features/invites.md 5.6) |
+| POST | `/invites/preview` | 👤 | `{ "token" }` → 참여 확인 화면용 정보: 여행 제목, 초대한 사람 이름, 받을 역할, 기간, `already_member`(멤버면 `trip_id`도). 그 외 정보 없음. 사용 횟수는 쓰지 않는다 |
+| POST | `/invites/accept` | 👤 | `{ "token" }` → 멤버로 추가, `{ "trip_id" }`. 이미 멤버면 `409 already_member`(사용 횟수 안 씀), 멤버 20명이면 `409 trip_member_limit` |
 
 **초대 링크 형식**: `https://<도메인>/invite#<token>`
 - 토큰을 URL 경로·쿼리가 아니라 **`#` 뒤(fragment)**에 넣는다. fragment는 브라우저가 서버로 보내지 않아서, 웹 서버 로그나 리퍼러에 토큰이 남지 않는다
 - 앱은 Universal Link / App Link로 열리며 전체 URL(fragment 포함)을 받는다 (T13)
 - 토큰은 요청 본문으로만 서버에 보낸다 (쿼리 문자열 금지 — 로그에 남음)
-- 존재하지 않는 토큰은 `404`, 만료·폐기·소진은 `410`
+- 존재하지 않는 토큰은 `404`, 만료·폐기·소진은 `410` (여러 이유가 겹치면 폐기 → 만료 → 소진). 형식이 틀린 토큰도 `404`
+- 링크 주소의 기본값은 서버 설정 `INVITE_BASE_URL`, 앱의 같은 이름 설정과 같아야 한다
 
 ### 3.8 바우처
 

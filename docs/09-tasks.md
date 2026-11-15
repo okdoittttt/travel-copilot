@@ -119,11 +119,11 @@
 
 ### F5. 초대 링크 (8주)
 
-- [ ] 테이블: invites
-- [ ] 생성·목록·폐기, `preview`, `accept` (원자적 사용 횟수 증가)
-- [ ] Universal Links(`apple-app-site-association`)·App Links(`assetlinks.json`), W01 안내 웹페이지
-- [ ] 앱: S15 초대 링크 관리, S16 초대 참여, 딥링크 처리(로그인 거쳐 돌아오기)
-- [ ] 보안 테스트: 토큰 추측 불가, 만료·폐기·소진, 동시 참여로 횟수 우회, 토큰이 로그·쿼리에 남지 않음
+- [x] 테이블: invites
+- [x] 생성·목록·폐기(+전체 폐기), `preview`, `accept` (원자적 사용 횟수 증가)
+- [x] Universal Links(`apple-app-site-association`)·App Links(`assetlinks.json`), W01 안내 웹페이지 — 파일·설정 준비, 실제 도메인 검증은 P1·P4 후
+- [x] 앱: S15 초대 링크 관리, S16 초대 참여, 딥링크 처리(로그인 거쳐 돌아오기), 링크 붙여넣기 참여
+- [x] 보안 테스트: 토큰 추측 불가, 만료·폐기·소진, 동시 참여로 횟수 우회, 토큰이 로그·쿼리에 남지 않음
 
 **위협**: T10~T14 / **로드맵**: 2단계 (초대 링크)
 

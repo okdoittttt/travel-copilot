@@ -138,15 +138,17 @@ erDiagram
 | 컬럼 | 타입 | 설명 | 민감도 |
 |---|---|---|---|
 | id | uuid PK | | |
-| trip_id | uuid FK → trips | | |
-| token_hash | char(64) UNIQUE | 128비트 이상 랜덤 토큰의 SHA-256. 원문 미저장 (T10·T14) | 🔴 |
+| trip_id | uuid FK → trips ON DELETE CASCADE | 인덱스 | |
+| token_hash | varchar(64) UNIQUE | 256비트 랜덤 토큰(43자)의 SHA-256. 원문 미저장 (T10·T14) | 🔴 |
 | role | enum(`editor`, `viewer`) | 참여하면 받는 권한. `owner`는 불가 | |
-| max_uses | int | 기본값 예: 10 | |
-| use_count | int | 참여할 때 원자적으로 증가: `UPDATE ... WHERE use_count < max_uses` (T12) | |
-| expires_at | timestamptz | 기본값 예: 7일 | |
+| max_uses | int | 1~20, 기본 10 (CHECK) | |
+| use_count | int | 참여할 때 원자적으로 증가: `UPDATE ... WHERE use_count < max_uses` (T12). CHECK `0 ≤ use_count ≤ max_uses` | |
+| expires_at | timestamptz | 1~7일, 기본 3일. 만료 30일 뒤 행 삭제 (주기 정리 작업) | |
 | revoked_at | timestamptz NULL | | |
-| created_by | uuid FK → users NULL | | |
+| created_by | uuid FK → users NULL | 탈퇴 시 NULL (미리보기의 초대한 사람 이름도 비움) | |
 | created_at | timestamptz | | |
+
+- `role`은 별도 enum `invite_role`(`editor`, `viewer`) — owner를 타입에서부터 막는다
 
 ### vouchers — 바우처
 
@@ -222,4 +224,4 @@ erDiagram
 ## 9. 열린 질문
 
 - **일정 제목 자동 채우기**: 장소를 고르면 Google 장소 이름을 제목 칸에 미리 채워주고 사용자가 고칠 수 있게 할지. 편리하지만, Google 이름을 그대로 저장하는 셈이라 약관상 **회색지대**다. 출시 전에 Google Maps Platform 지원팀에 문의해 확인한다. 확인 전까지는 이름을 힌트로 보여주고, 저장은 사용자가 직접 입력한 값만 한다
-- 기본값 수치 (여행 기간 60일, 멤버 20명, 초대 10회·7일, 바우처 10MB)는 API 설계 때 확정
+- ~~기본값 수치~~ → 06-api 4절로 확정 (초대는 기본 10회·3일, 최대 20회·7일)
