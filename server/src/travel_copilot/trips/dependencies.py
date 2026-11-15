@@ -85,5 +85,6 @@ def require_trip_member(
 TripViewer = Annotated[TripAccess, Depends(require_trip_member(TripRole.VIEWER))]
 TripEditor = Annotated[TripAccess, Depends(require_trip_member(TripRole.EDITOR))]
 TripOwner = Annotated[TripAccess, Depends(require_trip_member(TripRole.OWNER))]
+TripEditorLocked = Annotated[TripAccess, Depends(require_trip_member(TripRole.EDITOR, lock=True))]
 TripViewerLocked = Annotated[TripAccess, Depends(require_trip_member(TripRole.VIEWER, lock=True))]
 TripOwnerLocked = Annotated[TripAccess, Depends(require_trip_member(TripRole.OWNER, lock=True))]

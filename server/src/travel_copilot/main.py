@@ -15,13 +15,17 @@ from travel_copilot.core.logging import configure_logging
 from travel_copilot.core.middleware import NoStoreMiddleware, RequestContextMiddleware
 from travel_copilot.core.rate_limit import SlidingWindowRateLimiter
 from travel_copilot.health.router import router as health_router
+from travel_copilot.itinerary.router import router as itinerary_router
+from travel_copilot.places.cache import LocationCache
+from travel_copilot.places.client import GooglePlacesClient
+from travel_copilot.places.router import router as places_router
 from travel_copilot.trips.router import router as trips_router
 from travel_copilot.users.router import router as users_router
 
 API_PREFIX = "/api/v1"
 
 # 앱에 등록하는 라우터. 보안 테스트(라우트 전수 검사)도 이 목록을 쓴다
-ROUTERS = (health_router, auth_router, users_router, trips_router)
+ROUTERS = (health_router, auth_router, users_router, trips_router, itinerary_router, places_router)
 
 # 외부 HTTP 호출 타임아웃 (08-conventions S5)
 HTTP_TIMEOUT = httpx.Timeout(10.0, connect=3.0)
@@ -52,6 +56,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 web_client_id=settings.google_web_client_id,
                 allowed_azp=settings.google_allowed_azp_set,
             )
+            # Places 키가 없으면 장소 API만 503 (일정 항목은 키 없이 동작)
+            app.state.places_client = (
+                GooglePlacesClient(http, settings.google_places_api_key.get_secret_value())
+                if settings.places_enabled
+                else None
+            )
             try:
                 yield
             finally:
@@ -67,6 +77,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.rate_limiter = SlidingWindowRateLimiter()
+    app.state.location_cache = LocationCache()
     app.add_middleware(NoStoreMiddleware)
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)

@@ -11,7 +11,7 @@ from travel_copilot.auth.errors import TokenInvalid, TokenMissing
 from travel_copilot.auth.service import AuthService
 from travel_copilot.core.config import Settings
 from travel_copilot.core.db import get_session
-from travel_copilot.core.rate_limit import limit_by_ip
+from travel_copilot.core.rate_limit import enforce, limit_by_ip
 from travel_copilot.users import repository as users_repository
 from travel_copilot.users.models import User
 
@@ -51,6 +51,7 @@ def get_auth_service(
 
 
 async def get_current_user(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
     session: Annotated[AsyncSession, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],
@@ -58,9 +59,10 @@ async def get_current_user(
     """액세스 토큰으로 요청한 사용자를 찾는다.
 
     토큰 검증 후 사용자 행을 매번 읽는다. 그래서 삭제된 사용자는 토큰이 남아 있어도
-    즉시 거절된다 (T04).
+    즉시 거절된다 (T04). 사용자별 요청 횟수 제한(분당, 모든 인증 API 합산)도 여기서 건다.
 
     Args:
+        request: 현재 요청 (제한기를 꺼내는 데 사용).
         credentials: Authorization 헤더의 Bearer 토큰.
         session: 요청 단위 DB 세션.
         settings: 서명 키가 들어 있는 설정.
@@ -72,6 +74,7 @@ async def get_current_user(
         TokenMissing: 헤더가 없거나 Bearer가 아닐 때.
         TokenExpired: 토큰이 만료됐을 때.
         TokenInvalid: 토큰이 잘못됐거나 사용자가 없을 때.
+        RateLimited: 사용자별 요청 횟수를 넘었을 때.
     """
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise TokenMissing
@@ -79,6 +82,9 @@ async def get_current_user(
     user = await users_repository.get_by_id(session, user_id)
     if user is None:
         raise TokenInvalid
+    enforce(
+        request.app.state.rate_limiter, f"user:{user.id}", settings.user_rate_limit_per_minute, 60
+    )
     return user
 
 

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:travelcopilot/core/api/app_exception.dart';
 import 'package:travelcopilot/core/router/app_router.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
+import 'package:travelcopilot/features/itinerary/ui/itinerary_tab.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trip_rules.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
@@ -113,7 +114,7 @@ class _TripDetailView extends ConsumerWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  Center(child: Text(l10n.itineraryComingSoon)),
+                  ItineraryTab(snapshot: snapshot),
                   Center(child: Text(l10n.vouchersComingSoon)),
                   MembersTab(snapshot: snapshot, myUserId: myUserId),
                 ],

@@ -117,7 +117,7 @@ erDiagram
 | id | uuid PK | | |
 | trip_id | uuid FK → trips | | |
 | day | date | 여행 기간 안의 현지 날짜 | 🟡 |
-| position | int | 하루 안에서의 순서. UNIQUE(trip_id, day, position) | |
+| position | int | 하루 안에서의 순서. UNIQUE(trip_id, day, position) **DEFERRABLE INITIALLY DEFERRED** (순서 변경 중 잠깐 겹침 허용) | |
 | title | varchar(100) | **사용자 콘텐츠.** 오프라인에서 보이는 이름 | 🟡 |
 | memo | varchar(1000) NULL | 사용자 콘텐츠 | 🟡 |
 | google_place_id | varchar(255) NULL | 장소 없이 메모만 있는 항목도 허용 | |

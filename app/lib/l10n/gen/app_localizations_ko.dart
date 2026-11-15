@@ -152,9 +152,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tabMembers => '멤버';
 
   @override
-  String get itineraryComingSoon => '일정은 곧 추가됩니다.';
-
-  @override
   String get vouchersComingSoon => '바우처는 곧 추가됩니다.';
 
   @override
@@ -211,4 +208,104 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ownerMemberNotice => '내보낸 멤버의 기기에 남아 있던 여행 정보는 그 기기가 다음에 동기화할 때 지워져요.';
+
+  @override
+  String get itineraryEmpty => '이 날은 아직 일정이 없어요.';
+
+  @override
+  String get itineraryAdd => '일정 추가';
+
+  @override
+  String get itemNew => '일정 추가';
+
+  @override
+  String get itemEdit => '일정 수정';
+
+  @override
+  String get itemView => '일정';
+
+  @override
+  String get fieldItemTitle => '제목';
+
+  @override
+  String get fieldPlace => '장소';
+
+  @override
+  String get fieldPlaceHint => '장소 선택 (선택)';
+
+  @override
+  String get fieldDay => '날짜';
+
+  @override
+  String get fieldStartTime => '시작 시각';
+
+  @override
+  String get fieldStay => '머무는 시간';
+
+  @override
+  String get fieldTravelMode => '이전 일정에서 이동';
+
+  @override
+  String get fieldMemo => '메모';
+
+  @override
+  String get none => '없음';
+
+  @override
+  String get placeRemove => '장소 빼기';
+
+  @override
+  String googleNameHint(String name) {
+    return 'Google 장소 이름: $name';
+  }
+
+  @override
+  String get useThisName => '이 이름 사용';
+
+  @override
+  String get travelDrive => '차량';
+
+  @override
+  String get travelTransit => '대중교통';
+
+  @override
+  String get travelWalk => '도보';
+
+  @override
+  String get errorMemoTooLong => '1,000자 이하로 입력해주세요';
+
+  @override
+  String get itemDeleteTitle => '일정을 삭제할까요?';
+
+  @override
+  String itemDeleteBody(String title) {
+    return '\"$title\" 일정이 삭제됩니다.';
+  }
+
+  @override
+  String get delete => '삭제';
+
+  @override
+  String get placeSearchTitle => '장소 검색';
+
+  @override
+  String get placeSearchHint => '장소 이름이나 주소 (2글자 이상)';
+
+  @override
+  String get placeSearchEmpty => '검색 결과가 없어요.';
+
+  @override
+  String get placesUnavailable => '장소 검색을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.';
+
+  @override
+  String get rateLimited => '잠시 후 다시 시도해주세요.';
+
+  @override
+  String get placeOpenInMaps => 'Google 지도에서 열기';
+
+  @override
+  String get placeLoadFailed => '장소 정보를 불러오지 못했습니다.';
+
+  @override
+  String get itineraryChanged => '일정이 바뀌어 새로 불러왔습니다.';
 }

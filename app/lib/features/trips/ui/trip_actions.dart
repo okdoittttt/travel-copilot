@@ -29,6 +29,8 @@ void showMessage(BuildContext context, String message) {
 ///
 /// - 403: 역할이 바뀌었을 수 있으니 스냅샷을 다시 받는다
 /// - 404: 내보내졌거나 삭제된 여행. 목록을 다시 받고 목록 화면으로 간다
+/// - 409: 순서·버전 충돌이면 새로고침, 그 외(기간 축소 등)는 서버 안내 문구
+/// - 429: 잠시 후 다시, 502·503: 장소 검색 불가 (일정 화면은 정상)
 /// - 네트워크 오류: 저장되지 않았음을 분명히 알린다 (몰래 재시도하지 않음)
 void handleTripError(BuildContext context, WidgetRef ref, Object error, {String? tripId}) {
   final l10n = AppLocalizations.of(context);
@@ -41,6 +43,18 @@ void handleTripError(BuildContext context, WidgetRef ref, Object error, {String?
       showMessage(context, l10n.errorTripGone);
       ref.invalidate(tripListProvider);
       context.go(Routes.trips);
+    case ServerException(statusCode: 409, code: 'order_mismatch' || 'version_conflict'):
+      // 다른 멤버가 먼저 바꿨다. 최신 내용으로 다시 그린다
+      showMessage(context, l10n.itineraryChanged);
+      if (tripId != null) ref.invalidate(tripSnapshotProvider(tripId));
+    case ServerException(statusCode: 409):
+      // trip_period_conflict, day_item_limit 등: 서버 안내 문구가 구체적이라 그대로 보여준다
+      final detail = error.body['detail'];
+      showMessage(context, detail is String ? detail : l10n.errorGeneric);
+    case ServerException(statusCode: 429):
+      showMessage(context, l10n.rateLimited);
+    case ServerException(statusCode: 502 || 503):
+      showMessage(context, l10n.placesUnavailable);
     case NetworkException():
       showMessage(context, l10n.errorNotSaved);
     default:

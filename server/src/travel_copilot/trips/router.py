@@ -13,7 +13,7 @@ from travel_copilot.auth.dependencies import CurrentUser
 from travel_copilot.core.db import get_session
 from travel_copilot.trips import service
 from travel_copilot.trips.dependencies import (
-    TripEditor,
+    TripEditorLocked,
     TripOwnerLocked,
     TripViewer,
     TripViewerLocked,
@@ -60,8 +60,8 @@ async def get_trip(access: TripViewer, session: Session) -> TripSnapshot:
 
 
 @router.patch("/{trip_id}")
-async def update_trip(body: TripUpdate, access: TripEditor, session: Session) -> TripRead:
-    """여행 정보를 고친다. version이 다르면 409."""
+async def update_trip(body: TripUpdate, access: TripEditorLocked, session: Session) -> TripRead:
+    """여행 정보를 고친다. version이 다르면 409, 기간 밖으로 밀려나는 일정이 있으면 409."""
     return await service.update_trip(session, access, body)
 
 

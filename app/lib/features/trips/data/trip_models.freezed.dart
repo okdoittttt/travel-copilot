@@ -592,7 +592,7 @@ as DateTime,
 /// @nodoc
 mixin _$TripSnapshot {
 
- Trip get trip; List<TripMember> get members;
+ Trip get trip; List<TripMember> get members; List<ItineraryItem> get items;
 /// Create a copy of TripSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -606,20 +606,20 @@ $TripSnapshotCopyWith<TripSnapshot> get copyWith => _$TripSnapshotCopyWithImpl<T
 @override
 bool operator ==(Object other) {
   final _this = this as TripSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TripSnapshot&&(identical(other.trip, _this.trip) || other.trip == _this.trip)&&const DeepCollectionEquality().equals(other.members, _this.members));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TripSnapshot&&(identical(other.trip, _this.trip) || other.trip == _this.trip)&&const DeepCollectionEquality().equals(other.members, _this.members)&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as TripSnapshot;
-  return Object.hash(runtimeType,_this.trip,const DeepCollectionEquality().hash(_this.members));
+  return Object.hash(runtimeType,_this.trip,const DeepCollectionEquality().hash(_this.members),const DeepCollectionEquality().hash(_this.items));
 }
 
 @override
 String toString() {
   final _this = this as TripSnapshot;
-  return 'TripSnapshot(trip: ${_this.trip}, members: ${_this.members})';
+  return 'TripSnapshot(trip: ${_this.trip}, members: ${_this.members}, items: ${_this.items})';
 }
 
 
@@ -630,7 +630,7 @@ abstract mixin class $TripSnapshotCopyWith<$Res>  {
   factory $TripSnapshotCopyWith(TripSnapshot value, $Res Function(TripSnapshot) _then) = _$TripSnapshotCopyWithImpl;
 @useResult
 $Res call({
- Trip trip, List<TripMember> members
+ Trip trip, List<TripMember> members, List<ItineraryItem> items
 });
 
 
@@ -647,11 +647,12 @@ class _$TripSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of TripSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? trip = null,Object? members = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? trip = null,Object? members = null,Object? items = null,}) {
   return _then(TripSnapshot(
 trip: null == trip ? _self.trip : trip // ignore: cast_nullable_to_non_nullable
 as Trip,members: null == members ? _self.members : members // ignore: cast_nullable_to_non_nullable
-as List<TripMember>,
+as List<TripMember>,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
+as List<ItineraryItem>,
   ));
 }
 /// Create a copy of TripSnapshot
@@ -745,10 +746,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Trip trip,  List<TripMember> members)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Trip trip,  List<TripMember> members,  List<ItineraryItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TripSnapshot() when $default != null:
-return $default(_that.trip,_that.members);case _:
+return $default(_that.trip,_that.members,_that.items);case _:
   return orElse();
 
 }
@@ -766,10 +767,10 @@ return $default(_that.trip,_that.members);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Trip trip,  List<TripMember> members)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Trip trip,  List<TripMember> members,  List<ItineraryItem> items)  $default,) {final _that = this;
 switch (_that) {
 case _TripSnapshot():
-return $default(_that.trip,_that.members);case _:
+return $default(_that.trip,_that.members,_that.items);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -786,10 +787,10 @@ return $default(_that.trip,_that.members);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Trip trip,  List<TripMember> members)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Trip trip,  List<TripMember> members,  List<ItineraryItem> items)?  $default,) {final _that = this;
 switch (_that) {
 case _TripSnapshot() when $default != null:
-return $default(_that.trip,_that.members);case _:
+return $default(_that.trip,_that.members,_that.items);case _:
   return null;
 
 }
@@ -801,7 +802,7 @@ return $default(_that.trip,_that.members);case _:
 @JsonSerializable()
 
 class _TripSnapshot implements TripSnapshot {
-  const _TripSnapshot({required this.trip, required  List<TripMember> members}): _members = members;
+  const _TripSnapshot({required this.trip, required  List<TripMember> members,  List<ItineraryItem> items = const <ItineraryItem>[]}): _members = members,_items = items;
   factory _TripSnapshot.fromJson(Map<String, dynamic> json) => _$TripSnapshotFromJson(json);
 
 @override final  Trip trip;
@@ -810,6 +811,13 @@ class _TripSnapshot implements TripSnapshot {
   if (_members is EqualUnmodifiableListView) return _members;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_members);
+}
+
+ final  List<ItineraryItem> _items;
+@override@JsonKey() List<ItineraryItem> get items {
+  if (_items is EqualUnmodifiableListView) return _items;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_items);
 }
 
 
@@ -826,18 +834,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TripSnapshot&&(identical(other.trip, trip) || other.trip == trip)&&const DeepCollectionEquality().equals(other.members, _members));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TripSnapshot&&(identical(other.trip, trip) || other.trip == trip)&&const DeepCollectionEquality().equals(other.members, _members)&&const DeepCollectionEquality().equals(other.items, _items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,trip,const DeepCollectionEquality().hash(_members));
+    return Object.hash(runtimeType,trip,const DeepCollectionEquality().hash(_members),const DeepCollectionEquality().hash(_items));
 }
 
 @override
 String toString() {
-    return 'TripSnapshot(trip: $trip, members: $members)';
+    return 'TripSnapshot(trip: $trip, members: $members, items: $items)';
 }
 
 
@@ -848,7 +856,7 @@ abstract mixin class _$TripSnapshotCopyWith<$Res> implements $TripSnapshotCopyWi
   factory _$TripSnapshotCopyWith(_TripSnapshot value, $Res Function(_TripSnapshot) _then) = __$TripSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- Trip trip, List<TripMember> members
+ Trip trip, List<TripMember> members, List<ItineraryItem> items
 });
 
 
@@ -865,11 +873,12 @@ class __$TripSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of TripSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? trip = null,Object? members = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? trip = null,Object? members = null,Object? items = null,}) {
   return _then(_TripSnapshot(
 trip: null == trip ? _self.trip : trip // ignore: cast_nullable_to_non_nullable
 as Trip,members: null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
-as List<TripMember>,
+as List<TripMember>,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
+as List<ItineraryItem>,
   ));
 }
 
