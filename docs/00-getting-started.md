@@ -1,7 +1,7 @@
 # 실행 가이드
 
 > 로컬에서 Travel Copilot을 설정하고, 실행하고, 동작을 확인하는 방법.
-> 기준: F3(일정·장소 검색) 구현 시점 (2026-11-10). 기능이 추가될 때마다 이 문서를 갱신한다.
+> 기준: F4(이동시간·지도) 구현 시점 (2026-11-15). 기능이 추가될 때마다 이 문서를 갱신한다.
 
 ## 1. 구성 한눈에 보기
 
@@ -99,6 +99,8 @@ cd app
 flutter pub get
 xcrun simctl boot "iPhone 17 Pro"
 xcrun simctl keychain booted add-root-cert "$(mkcert -CAROOT)/rootCA.pem"   # 시뮬레이터마다 한 번
+# 앱 지도 키 (선택, 없으면 지도 탭만 안내 문구). git 제외 파일이다
+cp ios/Flutter/Secrets.xcconfig.example ios/Flutter/Secrets.xcconfig   # 열어서 GOOGLE_MAPS_IOS_KEY = 키값
 flutter run --dart-define-from-file=env/local.json
 ```
 
@@ -222,12 +224,19 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | 34 | 여행 기간 축소 | 마지막 날에 일정을 둔 채 여행 수정으로 종료일을 하루 당기기 | "기간 밖으로 밀려나는 일정이 있습니다 (12/27 1개)…" 안내, 저장 안 됨 |
 | 35 | viewer | 앱에서 가짜 멤버에게 소유권 넘기기 → 5.1의 "내 역할을 viewer로" SQL → 일정 탭 당겨서 새로고침 | 추가 버튼·끌기·밀기 없음, 일정을 누르면 읽기 전용 |
 | 36 | Google 호출 수 | Google Cloud 콘솔 → Places API (New) → 측정항목 | 검색 한 번에 자동완성 몇 회 + 장소 상세 1회 |
+| 37 | 이동 구간 | 장소 있는 일정 3개, 둘째·셋째에 이동수단(도보·대중교통) 선택 → 일정 탭 | 항목 사이에 "21분 · 3.9km" 같은 줄. **서버 키에 Routes API 허용 필요** (없으면 "이동시간을 알 수 없어요") |
+| 38 | 이동수단 미선택·장소 없음 | 이동수단을 비운 항목, 장소 없는 항목 | "이동수단을 선택하세요", "— 장소 없음" |
+| 39 | 늦음 경고 | 첫 일정 10:00·머무는 시간 2시간, 다음 일정 시작을 12:00으로 | 구간 줄이 주황색 "⚠ N분 늦음" |
+| 40 | 지도 | [지도] 전환 | 번호 마커, 처음에 모든 마커가 보이게. 마커 누르면 장소 정보 시트. **지도 키 필요** (없으면 "지도를 사용할 수 없습니다") |
+| 41 | 이동시간 저장 안 함 | 같은 날을 두 번 열기 → Google Cloud 콘솔 Routes 측정항목 | 열 때마다 구간 수만큼 호출 (캐시 없음, 약관) |
 
 ### 5.1 수동 확인 도우미 (로컬 전용)
 
 **Places 키 넣기 (#29~31)**: 저장소 루트 `.env`(`.env.example` 아님)에 `GOOGLE_PLACES_API_KEY=키값`을 추가하고 서버를 다시 띄운다 (`docker compose ... up -d`). 키는 Google Cloud에서 "Places API (New)"만 허용하도록 제한한 서버용 키여야 한다.
 
-**오래된 좌표 정리 (Google 약관 30일)**: `docker compose --env-file .env -f infra/docker-compose.yml exec server python -m travel_copilot.jobs.expire_locations` → "좌표를 지운 항목: N". 자동 실행은 운영 배포 때 정한다.
+**오래된 좌표 정리 (Google 약관 30일)**: 서버가 떠 있는 동안 6시간마다 자동으로 지운다 (F4). 바로 지우려면 `docker compose --env-file .env -f infra/docker-compose.yml exec server python -m travel_copilot.jobs.expire_locations` → "좌표를 지운 항목: N".
+
+**지도 키 넣기 (#40)**: `app/ios/Flutter/Secrets.xcconfig`에 `GOOGLE_MAPS_IOS_KEY = 키값` (git 제외 파일, 저장소가 공개라서). 키는 Google Cloud에서 "iOS 앱" + 번들 ID `com.okdoittttt.travelcopilot`, API는 "Maps SDK for iOS"만 허용. 넣은 뒤 앱을 다시 빌드(`flutter run`)해야 반영된다.
 
 
 초대 기능(F5) 전까지는 두 번째 사용자를 SQL로 만든다. **로컬 개발 DB에서만** 쓴다.
@@ -284,6 +293,6 @@ curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type:
 | 카카오·Apple 로그인 | F10 |
 | 파일 저장소(S3 호환) | F7 (MinIO 공식 이미지 배포 중단, 대체 도구는 F7 명세에서 결정) |
 | 스테이징 서버 | 출시 준비 전 (외부 준비물 P6) |
-| 이동시간·일정 지도 | F4 |
-| 좌표 30일 정리 자동 실행 | 운영 배포 (로드맵 5단계) |
+| Android 지도 키 | Android 확인 때 |
+| 실시간 교통 반영 이동시간, 경로선 | 2차 검토 |
 | Nginx ↔ 서버 구간 패킷 캡처 | 보안 로드맵 0단계 학습 과제 |

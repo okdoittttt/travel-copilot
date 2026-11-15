@@ -119,7 +119,7 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
-| GET | `/trips/{trip_id}/days/{date}` | O E V | 하루 일정 + **이동 구간(legs)**. 이동시간은 이 요청 때 Google Routes로 계산하고 저장하지 않는다 |
+| GET | `/trips/{trip_id}/days/{date}` | O E V | 하루 일정 + **이동 구간(legs)**. 이동시간은 이 요청 때 Google Routes로 계산하고 저장하지 않는다. 구간의 `mode`는 도착 항목의 `travel_mode`. 서버 키가 없거나 Google이 실패하면 해당 구간만 `unavailable` (일정은 200). 상세: features/routes-map.md 6절 |
 | POST | `/trips/{trip_id}/items` | O E | 일정 항목 추가 (`day`, `title`, 선택: `place_id`, `memo`, `start_time`, `stay_minutes`, `travel_mode`). **항상 그날 맨 뒤** — 위치는 순서 변경으로 (F3 결정). 좌표는 받지 않고 서버가 Google에서 받는다 |
 | PATCH | `/trips/{trip_id}/items/{item_id}` | O E | 항목 수정 (`version` 필수). `day`를 바꾸면 다른 날로 이동 (맨 뒤에 붙음) |
 | DELETE | `/trips/{trip_id}/items/{item_id}?version=N` | O E | 항목 삭제. 연결된 바우처는 남음 |
