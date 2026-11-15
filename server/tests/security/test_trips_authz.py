@@ -43,6 +43,7 @@ TRIP_ROUTE_CASES: list[tuple[str, str, dict[str, Any] | None]] = [
     ("PATCH", "/api/v1/trips/{trip_id}/items/{item_id}", {"version": 1, "title": "탈취"}),
     ("DELETE", "/api/v1/trips/{trip_id}/items/{item_id}", None),
     ("PUT", "/api/v1/trips/{trip_id}/days/{day}/order", {"items": []}),
+    ("GET", "/api/v1/trips/{trip_id}/days/{day}", None),
 ]
 
 

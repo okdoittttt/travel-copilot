@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from travel_copilot.auth.access_token import create_access_token
 from travel_copilot.auth.google import GOOGLE_JWKS_URL
 from travel_copilot.core.config import Settings
+from travel_copilot.directions.client import COMPUTE_ROUTES_URL
 from travel_copilot.main import create_app
 from travel_copilot.places.client import AUTOCOMPLETE_URL, PLACES_BASE_URL
 from travel_copilot.trips.models import TripMember, TripRole
@@ -57,6 +58,7 @@ def make_settings(**overrides: Any) -> Settings:
         "google_web_client_id": WEB_CLIENT_ID,
         "google_allowed_azp": f"{IOS_CLIENT_ID},{ANDROID_CLIENT_ID}",
         "google_places_api_key": PLACES_KEY,
+        "location_cleanup_interval_seconds": 0,
     }
     values.update(overrides)
     return Settings(**values)
@@ -292,3 +294,18 @@ async def add_item(
     assert response.status_code == 201, response.text
     item: dict[str, Any] = response.json()
     return item
+
+
+# --- 가짜 Google Routes -------------------------------------------------------
+
+LOUVRE_ID = "ChIJD3uTd9hx5kcR1IQvGfr8dbk"
+EIFFEL_ID = "ChIJLU7jZClu5kcR4PcOOO6p3I0"
+
+
+@pytest.fixture
+def google_routes(google_places: respx.MockRouter) -> respx.MockRouter:
+    """Routes computeRoutes를 가짜 응답으로 바꾼다 (Places 가짜와 같은 mock). 경로 이름: routes."""
+    google_places.post(COMPUTE_ROUTES_URL, name="routes").respond(
+        json={"routes": [{"duration": "1260s", "distanceMeters": 3900}]}
+    )
+    return google_places

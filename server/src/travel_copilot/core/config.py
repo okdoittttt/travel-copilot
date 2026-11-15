@@ -46,7 +46,8 @@ class Settings(DatabaseSettings):
     # 쉼표로 구분한 iOS·Android 클라이언트 ID. 비어 있으면 azp를 검사하지 않는다.
     google_allowed_azp: str = ""
 
-    # Google Places (서버 전용 키). 비어 있으면 장소 API만 503 (features/itinerary.md 5.8)
+    # Google 서버 전용 키 (Places API (New) + Routes API). 비어 있으면 장소 API는 503,
+    # 이동 구간은 모두 unavailable (features/itinerary.md 5.8, routes-map.md 6절)
     google_places_api_key: SecretStr = SecretStr("")
 
     # 요청 횟수 제한
@@ -56,6 +57,11 @@ class Settings(DatabaseSettings):
     places_autocomplete_per_minute: int = Field(default=60, ge=1)
     places_autocomplete_per_day: int = Field(default=1000, ge=1)
     places_details_per_day: int = Field(default=300, ge=1)
+    # 하루 일정 조회(이동시간 계산, Google Routes 호출) 사용자별 시간당 (06-api 5절)
+    day_view_per_hour: int = Field(default=120, ge=1)
+
+    # 30일 지난 Google 좌표 정리 주기(초). 0이면 끈다 (테스트용) — features/routes-map.md 5.3
+    location_cleanup_interval_seconds: int = Field(default=6 * 3600, ge=0)
 
     @field_validator("jwt_secret")
     @classmethod

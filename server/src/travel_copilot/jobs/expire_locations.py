@@ -33,6 +33,29 @@ async def expire_locations(session: AsyncSession, now: datetime | None = None) -
     return count
 
 
+async def run_periodically(
+    sessionmaker: async_sessionmaker[AsyncSession], interval_seconds: float
+) -> None:
+    """서버가 떠 있는 동안 주기적으로 오래된 좌표를 지운다 (features/routes-map.md 5.3).
+
+    서버 시작 직후 한 번 실행하고, 이후 `interval_seconds`마다 실행한다.
+    한 번 실패해도 다음 주기에 다시 시도한다. 서버 여러 대로 늘리면 한 대만 실행하게 바꾼다.
+
+    Args:
+        sessionmaker: 앱의 세션 팩토리.
+        interval_seconds: 실행 간격(초).
+    """
+    while True:
+        try:
+            async with sessionmaker() as session:
+                count = await expire_locations(session)
+            if count:
+                logger.info("오래된 좌표 정리", extra={"count": count})
+        except Exception:  # 주기 작업은 죽지 않고 다음 주기에 다시 시도
+            logger.exception("좌표 정리 실패")
+        await asyncio.sleep(interval_seconds)
+
+
 async def _main() -> None:
     settings = DatabaseSettings()  # 환경변수에서 읽음
     engine = create_async_engine(settings.database_url.get_secret_value())

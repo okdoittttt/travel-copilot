@@ -5,6 +5,7 @@
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -131,3 +132,36 @@ async def clear_locations_before(session: AsyncSession, cutoff: datetime) -> int
         .execution_options(synchronize_session=False)
     )
     return int(getattr(result, "rowcount", 0) or 0)
+
+
+async def update_location_if_place(
+    session: AsyncSession,
+    item_id: uuid.UUID,
+    place_id: str,
+    lat: float,
+    lng: float,
+    fetched_at: datetime,
+) -> None:
+    """항목의 장소가 아직 `place_id`일 때만 좌표를 갱신한다.
+
+    좌표를 받는 사이에 다른 멤버가 장소를 바꿨다면 옛 장소의 좌표를 덮어쓰지 않는다.
+    좌표 갱신은 사용자 수정이 아니라서 version을 올리지 않는다.
+
+    Args:
+        session: DB 세션.
+        item_id: 항목 ID.
+        place_id: 좌표를 받을 때 쓴 장소 ID.
+        lat: 위도.
+        lng: 경도.
+        fetched_at: 좌표를 받은 시각.
+    """
+    await session.execute(
+        update(ItineraryItem)
+        .where(ItineraryItem.id == item_id, ItineraryItem.google_place_id == place_id)
+        .values(
+            lat=Decimal(str(round(lat, 6))),
+            lng=Decimal(str(round(lng, 6))),
+            location_fetched_at=fetched_at,
+        )
+        .execution_options(synchronize_session=False)
+    )

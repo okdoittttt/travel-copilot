@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import date, datetime, time
+from enum import StrEnum
 from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, Field, field_serializer, model_validator
@@ -118,3 +119,31 @@ class DayItems(BaseModel):
 
     date: date
     items: list[ItemRead]
+
+
+class LegStatus(StrEnum):
+    """이동 구간 상태 (features/routes-map.md 6절)."""
+
+    OK = "ok"
+    NO_LOCATION = "no_location"
+    NO_MODE = "no_mode"
+    UNAVAILABLE = "unavailable"
+
+
+class RouteLeg(BaseModel):
+    """인접한 두 항목 사이 이동 구간. 저장하지 않고 요청마다 계산한다 (Google 약관)."""
+
+    from_item_id: uuid.UUID
+    to_item_id: uuid.UUID
+    mode: TravelMode | None
+    status: LegStatus
+    duration_seconds: int | None = None
+    distance_meters: int | None = None
+
+
+class DayView(BaseModel):
+    """하루 일정 + 이동 구간."""
+
+    date: date
+    items: list[ItemRead]
+    legs: list[RouteLeg]
