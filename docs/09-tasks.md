@@ -13,15 +13,15 @@
 | F0 | 기반 | 1~2 | `chore/foundation` | `features/foundation.md` | 0, 4 | D |
 | F1 | 인증 (Google 로그인) | 3~4 | `feat/auth` | `features/auth.md` | 1 | F0, P3 |
 | F2 | 여행·멤버 | 5 | `feat/trips` | `features/trips.md` | 2 | F1 |
-| F3 | 일정·장소 검색 | 6 | `feat/itinerary` | `features/itinerary.md` | 2 | F2, P3 |
-| F4 | 이동시간·지도 | 7 | `feat/routes-map` | `features/routes-map.md` | 2 | F3 |
-| F5 | 초대 링크 | 8 | `feat/invites` | `features/invites.md` | 2 | F2, P4 |
-| F6 | 동기화·오프라인 일정 | 9 | `feat/sync-offline` | `features/sync-offline.md` | 2, 3 | F3 |
-| F7 | 바우처 (서버·온라인) | 10 | `feat/vouchers` | `features/vouchers.md` | 3 | F2 |
-| F8 | 바우처 오프라인 | 11 | `feat/vouchers-offline` | `features/vouchers-offline.md` | 3 | F6, F7 |
-| F9 | 설정·회원 탈퇴 | 12 | `feat/account` | `features/account.md` | 3, 6 | F7 |
-| F10 | 카카오·Apple 로그인 | 11~12 | `feat/auth-kakao-apple` | `features/auth-kakao-apple.md` | 1 | F1, P1·P2 |
-| R | 출시 준비 | 12 | `chore/release` | — | 출시 전 점검 | F0~F10 |
+| F3 | 일정·장소 검색 | 6 | `feat/trips` | `features/itinerary.md` | 2 | F2, P3 |
+| F4 | 이동시간·지도 | 7 | `feat/trips` | `features/routes-map.md` | 2 | F3 |
+| F5 | 초대 링크 | 8 | `feat/trips` | `features/invites.md` | 2 | F2, P4 |
+| F6 | 동기화·오프라인 일정 | 9 | `feat/trips` | `features/sync-offline.md` | 2, 3 | F3 |
+| F7 | 바우처 (서버·온라인) | 10 | `feat/trips` | `features/vouchers.md` | 3 | F2 |
+| F8 | 바우처 오프라인 | 11 | `feat/trips` | `features/vouchers-offline.md` | 3 | F6, F7 |
+| F9 | 설정·회원 탈퇴 | 12 | `feat/trips` | `features/account.md` | 3, 6 | F7 |
+| F10 | 카카오·Apple 로그인 | 11~12 | `feat/trips` | `features/auth-kakao-apple.md` | 1 | F1, P1·P2 |
+| R | 출시 준비 | 12 | `feat/trips` | — | 출시 전 점검 | F0~F10 |
 
 - 기능마다 [03-dev-process.md](03-dev-process.md) 4절의 순서(명세 → 승인 → 구현 → 검증 → 보안 점검 → 반영 → PR)를 따른다
 - 각 작업의 체크리스트는 명세를 쓰면서 구체화한다. 아래는 범위를 정하는 수준
@@ -100,11 +100,11 @@
 
 ### F3. 일정·장소 검색 (6주)
 
-- [ ] 테이블: itinerary_items
-- [ ] 일정 항목 CRUD, 하루 순서 변경 (version 검사), 스냅샷에 일정 포함
-- [ ] Google Places 클라이언트: 자동완성·상세, 필드 마스크, 세션 토큰, 타임아웃, 사용자별 호출 제한
-- [ ] 앱: S06 일정 하루(이동 구간 제외), S08 장소 검색, S09 항목 추가·수정(제목 힌트 방식), S10 장소 정보, Google 출처 표시
-- [ ] 보안 테스트: 다른 여행의 항목 ID로 수정(S2 규칙), 호출 제한 초과
+- [x] 테이블: itinerary_items
+- [x] 일정 항목 CRUD, 하루 순서 변경 (version 검사), 스냅샷에 일정 포함
+- [x] Google Places 클라이언트: 자동완성·상세, 필드 마스크, 세션 토큰, 타임아웃, 사용자별 호출 제한
+- [x] 앱: S06 일정 하루(이동 구간 제외), S08 장소 검색, S09 항목 추가·수정(제목 힌트 방식), S10 장소 정보, Google 출처 표시
+- [x] 보안 테스트: 다른 여행의 항목 ID로 수정(S2 규칙), 호출 제한 초과
 
 **위협**: T06·T20·T23·T29 / **로드맵**: 2단계 (시큐어코딩, 외부 API)
 

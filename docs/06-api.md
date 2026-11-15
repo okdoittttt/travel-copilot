@@ -40,13 +40,14 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 | 401 | 인증 없음·만료 | `token_missing`, `token_expired`, `token_invalid` |
 | 403 | 멤버지만 권한 부족 | `forbidden` |
 | 404 | 없음 **또는 비멤버** (여행 존재 여부도 숨김) | `not_found` |
-| 409 | 동시 수정 충돌, 상태 충돌 | `version_conflict`, `already_member`, `owner_cannot_leave` |
+| 409 | 동시 수정 충돌, 상태 충돌 | `version_conflict`, `already_member`, `owner_cannot_leave`, `owner_role_locked`, `order_mismatch`, `day_item_limit`, `trip_period_conflict` |
 | 410 | 초대 링크 만료·폐기·횟수 소진 | `invite_expired`, `invite_revoked`, `invite_exhausted` |
 | 413 | 파일·요청 크기 초과 | `payload_too_large` |
 | 415 | 허용하지 않는 파일 형식 | `unsupported_file_type` |
 | 422 | 입력값 검증 실패 | `validation_error` (+ `errors` 배열: 필드, 이유) |
 | 429 | 요청 횟수 초과 | `rate_limited` (+ `Retry-After` 헤더) |
 | 502 | Google 등 외부 API 실패 | `upstream_error` |
+| 503 | 서버 구성 요소를 쓸 수 없음 | `unavailable`, `places_unavailable` (Places 키 미설정) |
 | 500 | 서버 오류 | `internal_error` (내부 정보·스택 트레이스 없음) |
 
 **401 vs 403 vs 404 규칙**
@@ -119,7 +120,7 @@ RFC 9457 (`application/problem+json`) + 앱이 분기할 때 쓰는 `code`:
 | 메서드 | 경로 | 권한 | 설명 |
 |---|---|---|---|
 | GET | `/trips/{trip_id}/days/{date}` | O E V | 하루 일정 + **이동 구간(legs)**. 이동시간은 이 요청 때 Google Routes로 계산하고 저장하지 않는다 |
-| POST | `/trips/{trip_id}/items` | O E | 일정 항목 추가 (`day`, `title`, 선택: `place_id`, `memo`, `start_time`, `stay_minutes`, `travel_mode`, `position`) |
+| POST | `/trips/{trip_id}/items` | O E | 일정 항목 추가 (`day`, `title`, 선택: `place_id`, `memo`, `start_time`, `stay_minutes`, `travel_mode`). **항상 그날 맨 뒤** — 위치는 순서 변경으로 (F3 결정). 좌표는 받지 않고 서버가 Google에서 받는다 |
 | PATCH | `/trips/{trip_id}/items/{item_id}` | O E | 항목 수정 (`version` 필수). `day`를 바꾸면 다른 날로 이동 (맨 뒤에 붙음) |
 | DELETE | `/trips/{trip_id}/items/{item_id}?version=N` | O E | 항목 삭제. 연결된 바우처는 남음 |
 | PUT | `/trips/{trip_id}/days/{date}/order` | O E | 하루 순서 변경. `{ "items": [{ "id", "version" }, ...] }` — 그날의 모든 항목이 정확히 들어 있어야 함 |

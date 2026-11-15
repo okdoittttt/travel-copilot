@@ -1,7 +1,7 @@
 # 실행 가이드
 
 > 로컬에서 Travel Copilot을 설정하고, 실행하고, 동작을 확인하는 방법.
-> 기준: F2(여행·멤버) 구현 시점 (2026-11-08). 기능이 추가될 때마다 이 문서를 갱신한다.
+> 기준: F3(일정·장소 검색) 구현 시점 (2026-11-10). 기능이 추가될 때마다 이 문서를 갱신한다.
 
 ## 1. 구성 한눈에 보기
 
@@ -213,8 +213,22 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | 25 | 소유권 넘긴 뒤 | 가짜 멤버에게 소유권 넘기기 | 내 역할 "편집자", 메뉴에 "여행 삭제" 없음·"여행 나가기" 있음. 나가면 목록에서 사라짐 |
 | 26 | 여행 삭제 | 소유자로 메뉴 → 여행 삭제 → 제목 다시 입력 | 제목이 같아야 삭제 버튼 활성화, 삭제 후 목록으로 |
 | 27 | 남의 여행 접근 | `curl --cacert "$CA" -H "Authorization: Bearer $TOKEN" https://localhost/api/v1/trips/$(uuidgen)` | `404`, `"code":"not_found"` (멤버가 아닌 여행도 같은 응답) |
+| 28 | 일정 추가 (장소 없이) | 여행 상세 → 일정 탭 → 날짜 고르기 → "일정 추가" → 제목만 입력 → 저장 | 그날 목록 맨 아래에 표시. Places 키가 없어도 된다 |
+| 29 | 장소 검색 | 일정 추가 → "장소 선택" → 2글자 이상 입력 | 0.3초 뒤 결과, 아래에 "Google Maps" 표시. **`.env`에 `GOOGLE_PLACES_API_KEY` 필요** (없으면 "장소 검색을 사용할 수 없습니다") |
+| 30 | Google 이름 힌트 | 검색 결과에서 장소 선택 | 입력 화면에 "Google 장소 이름: ○○ [이 이름 사용]". 누르면 제목에 채움 |
+| 31 | 장소 정보 | 장소가 있는 일정 오른쪽 📍 → 시트 | 주소, "Google 지도에서 열기", "Google Maps" 표시 |
+| 32 | 순서 변경·삭제 | 일정을 길게 눌러 끌기 / 왼쪽으로 밀기 → 삭제 확인 | 새 순서 유지(새로고침해도), 삭제 후 번호 당김 |
+| 33 | 다른 날로 옮기기 | 일정 누르기 → 날짜 변경 → 저장 | 새 날 맨 뒤로 이동 |
+| 34 | 여행 기간 축소 | 마지막 날에 일정을 둔 채 여행 수정으로 종료일을 하루 당기기 | "기간 밖으로 밀려나는 일정이 있습니다 (12/27 1개)…" 안내, 저장 안 됨 |
+| 35 | viewer | 앱에서 가짜 멤버에게 소유권 넘기기 → 5.1의 "내 역할을 viewer로" SQL → 일정 탭 당겨서 새로고침 | 추가 버튼·끌기·밀기 없음, 일정을 누르면 읽기 전용 |
+| 36 | Google 호출 수 | Google Cloud 콘솔 → Places API (New) → 측정항목 | 검색 한 번에 자동완성 몇 회 + 장소 상세 1회 |
 
 ### 5.1 수동 확인 도우미 (로컬 전용)
+
+**Places 키 넣기 (#29~31)**: 저장소 루트 `.env`(`.env.example` 아님)에 `GOOGLE_PLACES_API_KEY=키값`을 추가하고 서버를 다시 띄운다 (`docker compose ... up -d`). 키는 Google Cloud에서 "Places API (New)"만 허용하도록 제한한 서버용 키여야 한다.
+
+**오래된 좌표 정리 (Google 약관 30일)**: `docker compose --env-file .env -f infra/docker-compose.yml exec server python -m travel_copilot.jobs.expire_locations` → "좌표를 지운 항목: N". 자동 실행은 운영 배포 때 정한다.
+
 
 초대 기능(F5) 전까지는 두 번째 사용자를 SQL로 만든다. **로컬 개발 DB에서만** 쓴다.
 
@@ -228,6 +242,11 @@ WITH u AS (INSERT INTO users (id, display_name, created_at, updated_at)
            VALUES (gen_random_uuid(), '가짜 친구', now(), now()) RETURNING id),
      t AS (SELECT id FROM trips ORDER BY created_at DESC LIMIT 1)
 INSERT INTO trip_members (trip_id, user_id, role) SELECT t.id, u.id, 'editor' FROM t, u;"
+
+# 내 역할을 viewer로 (#35, 가짜 멤버에게 소유권을 넘긴 뒤. 가장 최근 여행 기준)
+$PSQL -c "UPDATE trip_members SET role = 'viewer'
+WHERE user_id = (SELECT id FROM users ORDER BY created_at LIMIT 1)
+  AND trip_id = (SELECT id FROM trips ORDER BY created_at DESC LIMIT 1) AND role = 'editor';"
 
 # curl용 액세스 토큰 (내 계정, 15분). 409 확인 등에 쓴다
 MY_ID=$($PSQL -tAc "SELECT id FROM users ORDER BY created_at LIMIT 1")
@@ -265,4 +284,6 @@ curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type:
 | 카카오·Apple 로그인 | F10 |
 | 파일 저장소(S3 호환) | F7 (MinIO 공식 이미지 배포 중단, 대체 도구는 F7 명세에서 결정) |
 | 스테이징 서버 | 출시 준비 전 (외부 준비물 P6) |
+| 이동시간·일정 지도 | F4 |
+| 좌표 30일 정리 자동 실행 | 운영 배포 (로드맵 5단계) |
 | Nginx ↔ 서버 구간 패킷 캡처 | 보안 로드맵 0단계 학습 과제 |
