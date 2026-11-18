@@ -211,7 +211,20 @@ erDiagram
 
 - MVP의 새로고침은 **여행 하나를 통째로 다시 받는다** (여행 정보 + 멤버 + 일정 + 바우처 목록). 여행 하나의 데이터가 작아서 변경분만 주고받는 구조는 필요 없다
 - 그래서 삭제 기록(tombstone)도 두지 않는다. 받은 목록에 없으면 앱이 캐시에서 지운다
-- 여행 목록 조회 결과에 없는 여행 = 내보내졌거나 삭제됨 → 앱이 그 여행의 캐시와 바우처 파일을 지운다 (T08)
+- 여행 목록 조회 결과에 없는 여행 = 내보내졌거나 삭제됨 → 앱이 그 여행의 캐시와 바우처 파일을 지운다 (T08). **모든 페이지를 받았을 때만** 지운다
+
+### 7.1 앱 로컬 DB (F6, drift)
+
+서버 응답 JSON을 여행 단위로 통째로 저장한다. 앱은 캐시를 조건으로 검색하지 않고 갱신 때 통째로 바꾸기 때문이다 (features/sync-offline.md 5.2).
+
+| 테이블 | 열 | 내용 |
+|---|---|---|
+| cache_meta | key, value | `owner_user_id`(캐시 주인), `trips_synced_at` |
+| cached_trips | trip_id, json, position | 여행 목록 한 줄 = Trip JSON |
+| cached_snapshots | trip_id, json, synced_at | 스냅샷 JSON. **좌표(location)는 저장 전에 지운다** |
+
+- 위치: 앱 지원 폴더의 `trip_cache/` (기기 백업 제외). `PRAGMA secure_delete = ON`
+- 로그아웃·다른 계정 로그인: DB 파일째 삭제. 해석할 수 없는 행(형식 변경)은 지우고 캐시 없음으로 다룬다
 
 ## 8. MVP에서 DB에 두지 않는 것
 
