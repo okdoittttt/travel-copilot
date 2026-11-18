@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:travelcopilot/features/auth/data/auth_models.dart';
 import 'package:travelcopilot/features/auth/data/auth_repository.dart';
+import 'package:travelcopilot/features/trips/state/trips_providers.dart';
 
 part 'auth_controller.g.dart';
 
@@ -20,6 +21,7 @@ class AuthController extends _$AuthController {
 
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
+    ref.invalidate(syncTimesProvider);
     state = const AsyncData(null);
   }
 

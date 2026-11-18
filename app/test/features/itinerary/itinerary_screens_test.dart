@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:travelcopilot/core/api/app_exception.dart';
 import 'package:travelcopilot/core/platform/maps_config.dart';
+import 'package:travelcopilot/core/state/connectivity.dart';
 import 'package:travelcopilot/core/state/provider_retry.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_api.dart';
 import 'package:travelcopilot/features/itinerary/data/itinerary_models.dart';
@@ -15,6 +16,7 @@ import 'package:travelcopilot/features/itinerary/ui/itinerary_tab.dart';
 import 'package:travelcopilot/features/places/data/place_models.dart';
 import 'package:travelcopilot/features/places/data/places_api.dart';
 import 'package:travelcopilot/features/places/ui/place_search_screen.dart';
+import 'package:travelcopilot/features/trips/data/trip_cache.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
@@ -51,6 +53,8 @@ void main() {
         itineraryApiProvider.overrideWithValue(itinerary),
         placesApiProvider.overrideWithValue(places),
         tripsApiProvider.overrideWithValue(trips),
+        // 기기 DB 대신 메모리 DB (테스트마다 새로)
+        tripCacheProvider.overrideWith((ref) => TripCache.memory()),
         // 테스트에는 지도 키가 없다 (실제 지도는 플랫폼 뷰라 위젯 테스트에서 그릴 수 없음)
         mapsConfiguredProvider.overrideWith((ref) async => false),
       ],
@@ -200,7 +204,8 @@ void main() {
     });
 
     testWidgets('이동시간을 못 받으면 배너와 다시 시도', (tester) async {
-      when(() => itinerary.day(any(), any())).thenThrow(const NetworkException());
+      when(() => itinerary.day(any(), any()))
+          .thenThrow(const ServerException(statusCode: 502, code: 'upstream_error'));
       await pump(
         tester,
         ItineraryTab(
@@ -232,6 +237,43 @@ void main() {
 
       expect(find.text('지도를 사용할 수 없습니다.'), findsOneWidget);
       expect(find.text('일정 추가'), findsNothing);
+    });
+
+    testWidgets('오프라인이면 이동시간·지도 대신 안내, 일정은 그대로 (F6)', (tester) async {
+      when(() => itinerary.day(any(), any())).thenThrow(const NetworkException());
+      container.read(connectivityProvider.notifier).report(reached: false);
+      await pump(
+        tester,
+        ItineraryTab(
+          snapshot: snapshot(items: items),
+          today: DateTime(2026, 12, 21),
+        ),
+      );
+
+      expect(find.text('오프라인 — 이동시간은 연결 후 표시됩니다.'), findsOneWidget);
+      expect(find.text('오르세'), findsOneWidget);
+
+      await tester.tap(find.text('지도'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('map-offline')), findsOneWidget);
+    });
+
+    testWidgets('오프라인이면 일정 추가를 막는다 (F6)', (tester) async {
+      when(() => itinerary.day(any(), any())).thenThrow(const NetworkException());
+      container.read(connectivityProvider.notifier).report(reached: false);
+      await pump(
+        tester,
+        ItineraryTab(
+          snapshot: snapshot(items: items),
+          today: DateTime(2026, 12, 21),
+        ),
+      );
+
+      await tester.tap(find.text('일정 추가'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('연결 후 수정할 수 있습니다.'), findsOneWidget);
+      expect(find.byType(ItemFormScreen), findsNothing);
     });
   });
 

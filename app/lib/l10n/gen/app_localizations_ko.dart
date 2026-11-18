@@ -461,4 +461,42 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get errorNetwork => '연결을 확인하고 다시 시도해주세요.';
+
+  @override
+  String get offlineBanner => '오프라인';
+
+  @override
+  String offlineBannerSynced(String ago) {
+    return '오프라인 · 마지막 동기화: $ago';
+  }
+
+  @override
+  String get agoJustNow => '방금';
+
+  @override
+  String agoMinutes(int count) {
+    return '$count분 전';
+  }
+
+  @override
+  String agoHours(int count) {
+    return '$count시간 전';
+  }
+
+  @override
+  String agoDays(int count) {
+    return '$count일 전';
+  }
+
+  @override
+  String get offlineEditBlocked => '연결 후 수정할 수 있습니다.';
+
+  @override
+  String get legsOffline => '오프라인 — 이동시간은 연결 후 표시됩니다.';
+
+  @override
+  String get mapOffline => '지도는 연결 후 볼 수 있습니다.';
+
+  @override
+  String get placeOffline => '장소 정보는 연결 후 볼 수 있습니다.';
 }

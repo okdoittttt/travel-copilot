@@ -10,6 +10,7 @@ import 'package:travelcopilot/features/places/data/place_models.dart';
 import 'package:travelcopilot/features/places/ui/place_search_screen.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
@@ -140,6 +141,7 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
   }
 
   Future<void> _save() async {
+    if (!ensureOnline(context, ref)) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {

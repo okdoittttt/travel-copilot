@@ -925,6 +925,66 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'연결을 확인하고 다시 시도해주세요.'**
   String get errorNetwork;
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In ko, this message translates to:
+  /// **'오프라인'**
+  String get offlineBanner;
+
+  /// No description provided for @offlineBannerSynced.
+  ///
+  /// In ko, this message translates to:
+  /// **'오프라인 · 마지막 동기화: {ago}'**
+  String offlineBannerSynced(String ago);
+
+  /// No description provided for @agoJustNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'방금'**
+  String get agoJustNow;
+
+  /// No description provided for @agoMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}분 전'**
+  String agoMinutes(int count);
+
+  /// No description provided for @agoHours.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}시간 전'**
+  String agoHours(int count);
+
+  /// No description provided for @agoDays.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}일 전'**
+  String agoDays(int count);
+
+  /// No description provided for @offlineEditBlocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결 후 수정할 수 있습니다.'**
+  String get offlineEditBlocked;
+
+  /// No description provided for @legsOffline.
+  ///
+  /// In ko, this message translates to:
+  /// **'오프라인 — 이동시간은 연결 후 표시됩니다.'**
+  String get legsOffline;
+
+  /// No description provided for @mapOffline.
+  ///
+  /// In ko, this message translates to:
+  /// **'지도는 연결 후 볼 수 있습니다.'**
+  String get mapOffline;
+
+  /// No description provided for @placeOffline.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 정보는 연결 후 볼 수 있습니다.'**
+  String get placeOffline;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
