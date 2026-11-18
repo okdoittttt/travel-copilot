@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travelcopilot/core/api/app_exception.dart';
 import 'package:travelcopilot/features/places/data/place_models.dart';
 import 'package:travelcopilot/features/places/data/places_api.dart';
 import 'package:travelcopilot/features/places/ui/google_attribution.dart';
@@ -47,7 +48,7 @@ class _PlaceSheetState extends ConsumerState<_PlaceSheet> {
               if (snapshot.connectionState != ConnectionState.done)
                 const LinearProgressIndicator()
               else if (snapshot.hasError)
-                Text(l10n.placeLoadFailed)
+                Text(snapshot.error is NetworkException ? l10n.placeOffline : l10n.placeLoadFailed)
               else ...[
                 if (snapshot.data!.address != null) Text(snapshot.data!.address!),
                 const SizedBox(height: 16),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +11,9 @@ import 'package:travelcopilot/features/invites/data/invites_api.dart';
 import 'package:travelcopilot/features/invites/state/invite_providers.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
+import 'package:travelcopilot/features/trips/data/trips_repository.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
 final _log = Logger('TripActions');
@@ -44,6 +48,8 @@ void handleTripError(BuildContext context, WidgetRef ref, Object error, {String?
       if (tripId != null) ref.invalidate(tripSnapshotProvider(tripId));
     case ServerException(statusCode: 404):
       showMessage(context, l10n.errorTripGone);
+      // 내보내졌거나 삭제된 여행: 기기 캐시에서도 지운다 (T08)
+      if (tripId != null) unawaited(ref.read(tripsRepositoryProvider).forgetTrip(tripId));
       ref.invalidate(tripListProvider);
       context.go(Routes.trips);
     case ServerException(statusCode: 409, code: 'order_mismatch' || 'version_conflict'):
@@ -95,6 +101,7 @@ Future<bool> _confirm(
 
 /// 여행 삭제. 실수를 막으려고 여행 제목을 다시 입력해야 한다 (07-screens S05).
 Future<void> deleteTrip(BuildContext context, WidgetRef ref, Trip trip) async {
+  if (!ensureOnline(context, ref)) return;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => _DeleteTripDialog(title: trip.title),
@@ -102,6 +109,7 @@ Future<void> deleteTrip(BuildContext context, WidgetRef ref, Trip trip) async {
   if (confirmed != true || !context.mounted) return;
   try {
     await ref.read(tripsApiProvider).delete(trip.id, trip.version);
+    await ref.read(tripsRepositoryProvider).forgetTrip(trip.id);
     ref.invalidate(tripListProvider);
     if (context.mounted) context.go(Routes.trips);
   } on ServerException catch (error) {
@@ -168,6 +176,7 @@ class _DeleteTripDialogState extends State<_DeleteTripDialog> {
 
 /// 여행 나가기 (editor·viewer).
 Future<void> leaveTrip(BuildContext context, WidgetRef ref, Trip trip, String myUserId) async {
+  if (!ensureOnline(context, ref)) return;
   final l10n = AppLocalizations.of(context);
   final confirmed = await _confirm(
     context,
@@ -179,6 +188,7 @@ Future<void> leaveTrip(BuildContext context, WidgetRef ref, Trip trip, String my
   if (!confirmed || !context.mounted) return;
   try {
     await ref.read(tripsApiProvider).removeMember(trip.id, myUserId);
+    await ref.read(tripsRepositoryProvider).forgetTrip(trip.id);
     ref.invalidate(tripListProvider);
     if (context.mounted) context.go(Routes.trips);
   } on AppException catch (error) {
@@ -193,15 +203,19 @@ Future<void> changeMemberRole(
   Trip trip,
   TripMember member,
   TripRole role,
-) => _memberAction(context, ref, trip, () async {
-  await ref.read(tripsApiProvider).changeRole(trip.id, member.userId, role);
-});
+) async {
+  if (!ensureOnline(context, ref)) return;
+  await _memberAction(context, ref, trip, () async {
+    await ref.read(tripsApiProvider).changeRole(trip.id, member.userId, role);
+  });
+}
 
 /// 멤버 내보내기 (owner).
 ///
 /// 열린 초대 링크가 있으면 "링크도 모두 폐기" 체크박스(기본 선택)를 보여준다.
 /// 내보낸 사람이 남은 링크로 다시 들어오는 것을 막기 위해서다 (features/invites.md 5.6).
 Future<void> removeMember(BuildContext context, WidgetRef ref, Trip trip, TripMember member) async {
+  if (!ensureOnline(context, ref)) return;
   final openInvites = await _openInviteCount(ref, trip.id);
   if (!context.mounted) return;
   final result = await showDialog<({bool revokeInvites})>(
@@ -282,6 +296,7 @@ Future<void> transferOwnership(
   Trip trip,
   TripMember member,
 ) async {
+  if (!ensureOnline(context, ref)) return;
   final l10n = AppLocalizations.of(context);
   final confirmed = await _confirm(
     context,

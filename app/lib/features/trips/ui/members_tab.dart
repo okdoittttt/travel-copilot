@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:travelcopilot/core/router/app_router.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
@@ -23,7 +26,7 @@ class MembersTab extends ConsumerWidget {
     final isOwner = trip.myRole.isOwner;
 
     return RefreshIndicator(
-      onRefresh: () => ref.refresh(tripSnapshotProvider(trip.id).future),
+      onRefresh: () => ref.read(tripSnapshotProvider(trip.id).notifier).refresh(),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -37,7 +40,9 @@ class MembersTab extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: OutlinedButton.icon(
                 key: const Key('open-invites'),
-                onPressed: () => context.push(Routes.invites(trip.id)),
+                onPressed: () {
+                  if (ensureOnline(context, ref)) unawaited(context.push(Routes.invites(trip.id)));
+                },
                 icon: const Icon(Icons.link),
                 label: Text(l10n.invitesTitle),
               ),

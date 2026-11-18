@@ -9,6 +9,7 @@ import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trip_rules.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
 import 'package:travelcopilot/features/trips/ui/members_tab.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
@@ -81,7 +82,8 @@ class _TripDetailView extends ConsumerWidget {
             PopupMenuButton<_MenuAction>(
               key: const Key('trip-menu'),
               onSelected: (action) => switch (action) {
-                _MenuAction.edit => context.push(Routes.editTrip(trip.id)),
+                _MenuAction.edit =>
+                  ensureOnline(context, ref) ? context.push(Routes.editTrip(trip.id)) : null,
                 _MenuAction.delete => deleteTrip(context, ref, trip),
                 _MenuAction.leave => leaveTrip(context, ref, trip, myUserId),
               },
@@ -105,6 +107,7 @@ class _TripDetailView extends ConsumerWidget {
         ),
         body: Column(
           children: [
+            OfflineBanner(syncKey: trip.id),
             ListTile(
               title: Text(formatPeriod(trip.startDate, trip.endDate, DateTime.now())),
               subtitle: Text('${trip.destination} · ${trip.timezone.replaceAll('_', ' ')}'),

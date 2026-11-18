@@ -35,7 +35,7 @@ final class AuthControllerProvider extends $AsyncNotifierProvider<AuthController
   AuthController create() => AuthController();
 }
 
-String _$authControllerHash() => r'4eb58203f35376ea164dbc627317ea76e8bb5b39';
+String _$authControllerHash() => r'54e8758ce6fc72772a02a240784c7a0c42ca5412';
 
 /// 앱 전체의 로그인 상태. 값이 null이면 로그인 안 됨. 라우터가 이 상태로 화면을 바꾼다.
 

@@ -10,6 +10,7 @@ import 'package:travelcopilot/features/invites/data/invites_api.dart';
 import 'package:travelcopilot/features/invites/state/invite_providers.dart';
 import 'package:travelcopilot/features/invites/ui/invite_join_screen.dart';
 import 'package:travelcopilot/features/invites/ui/invites_screen.dart';
+import 'package:travelcopilot/features/trips/data/trip_cache.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
@@ -62,6 +63,8 @@ void main() {
       overrides: [
         invitesApiProvider.overrideWithValue(api),
         tripsApiProvider.overrideWithValue(trips),
+        // 기기 DB 대신 메모리 DB (테스트마다 새로)
+        tripCacheProvider.overrideWith((ref) => TripCache.memory()),
         inviteBaseUrlProvider.overrideWithValue(_base),
         shareTextProvider.overrideWithValue((text) async => shared.add(text)),
       ],

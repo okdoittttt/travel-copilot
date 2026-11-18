@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ import 'package:travelcopilot/features/itinerary/ui/leg_row.dart';
 import 'package:travelcopilot/features/places/ui/place_sheet.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
@@ -50,6 +53,7 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
   }
 
   Future<void> _reorder(List<ItineraryItem> current, int oldIndex, int newIndex) async {
+    if (!ensureOnline(context, ref)) return;
     final ordered = [...current];
     final moved = ordered.removeAt(oldIndex);
     // onReorderItem은 빠진 자리를 이미 반영한 newIndex를 준다
@@ -72,6 +76,7 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
   }
 
   Future<bool> _delete(ItineraryItem item) async {
+    if (!ensureOnline(context, ref)) return false;
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -105,6 +110,8 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
     final canEdit = _trip.myRole.canEditTrip;
     final items = _pendingOrder ?? itemsOfDay(widget.snapshot.items, _day);
     final dayView = ref.watch(dayViewProvider(_trip.id, _day));
+    // 이동 구간·지도는 온라인 전용 (좌표·이동시간은 기기에 저장하지 않는다)
+    final offline = watchOffline(ref) || dayView.error is NetworkException;
     // 화면의 순서와 맞는 구간만 쓴다 (순서 변경 직후 서버 응답이 오기 전 등)
     final legsByPair = {
       for (final leg in dayView.value?.legs ?? const <RouteLeg>[])
@@ -167,7 +174,7 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
         const Divider(height: 1),
         if (dayView.hasError && !dayView.isLoading && items.length > 1)
           MaterialBanner(
-            content: Text(l10n.legsLoadFailed),
+            content: Text(offline ? l10n.legsOffline : l10n.legsLoadFailed),
             actions: [
               TextButton(
                 onPressed: () => ref.invalidate(dayViewProvider(_trip.id, _day)),
@@ -176,13 +183,17 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
             ],
           ),
         if (_showMap)
-          Expanded(child: DayMapView(items: dayView.value?.items ?? const []))
+          Expanded(
+            child: offline
+                ? Center(child: Text(l10n.mapOffline, key: const Key('map-offline')))
+                : DayMapView(items: dayView.value?.items ?? const []),
+          )
         else
           Expanded(
             child: RefreshIndicator(
               onRefresh: () {
                 ref.invalidate(dayViewProvider(_trip.id, _day));
-                return ref.refresh(tripSnapshotProvider(_trip.id).future);
+                return ref.read(tripSnapshotProvider(_trip.id).notifier).refresh();
               },
               child: items.isEmpty
                   ? ListView(
@@ -229,7 +240,11 @@ class _ItineraryTabState extends ConsumerState<ItineraryTab> {
             child: FilledButton.tonalIcon(
               icon: const Icon(Icons.add),
               label: Text(l10n.itineraryAdd),
-              onPressed: () => context.push(Routes.newItem(_trip.id, _day)),
+              onPressed: () {
+                if (ensureOnline(context, ref)) {
+                  unawaited(context.push(Routes.newItem(_trip.id, _day)));
+                }
+              },
             ),
           ),
       ],

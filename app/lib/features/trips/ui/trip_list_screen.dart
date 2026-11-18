@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import 'package:travelcopilot/features/invites/ui/invite_join_screen.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trip_rules.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
 
@@ -30,7 +33,9 @@ class TripListScreen extends ConsumerWidget {
             key: const Key('join-by-link'),
             tooltip: l10n.inviteJoinByLink,
             icon: const Icon(Icons.group_add_outlined),
-            onPressed: () => joinByPastedLink(context, ref),
+            onPressed: () {
+              if (ensureOnline(context, ref)) unawaited(joinByPastedLink(context, ref));
+            },
           ),
           // 설정 화면(S17)은 F9. 그 전까지 로그아웃은 여기에 둔다
           TextButton(
@@ -40,32 +45,46 @@ class TripListScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(Routes.newTrip),
+        onPressed: () {
+          if (ensureOnline(context, ref)) unawaited(context.push(Routes.newTrip));
+        },
         icon: const Icon(Icons.add),
         label: Text(l10n.tripCreate),
       ),
-      body: trips.when(
-        data: (items) => RefreshIndicator(
-          onRefresh: () => ref.refresh(tripListProvider.future),
-          child: _TripListView(trips: items, today: today ?? DateTime.now()),
-        ),
-        error: (_, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.tripsLoadFailed),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => ref.invalidate(tripListProvider),
-                child: Text(l10n.retry),
-              ),
-            ],
-          ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+      body: Column(
+        children: [
+          const OfflineBanner(syncKey: tripListSyncKey),
+          Expanded(child: _body(context, ref, l10n, trips)),
+        ],
       ),
     );
   }
+
+  Widget _body(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    AsyncValue<List<Trip>> trips,
+  ) => trips.when(
+    data: (items) => RefreshIndicator(
+      onRefresh: () => ref.read(tripListProvider.notifier).refresh(),
+      child: _TripListView(trips: items, today: today ?? DateTime.now()),
+    ),
+    error: (_, _) => Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l10n.tripsLoadFailed),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => ref.invalidate(tripListProvider),
+            child: Text(l10n.retry),
+          ),
+        ],
+      ),
+    ),
+    loading: () => const Center(child: CircularProgressIndicator()),
+  );
 }
 
 class _TripListView extends StatelessWidget {

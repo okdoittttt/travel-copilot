@@ -6,12 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:travelcopilot/core/api/app_exception.dart';
+import 'package:travelcopilot/core/state/connectivity.dart';
 import 'package:travelcopilot/core/state/provider_retry.dart';
 import 'package:travelcopilot/features/auth/data/auth_models.dart';
 import 'package:travelcopilot/features/auth/data/auth_repository.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
 import 'package:travelcopilot/features/invites/data/invite_models.dart';
 import 'package:travelcopilot/features/invites/data/invites_api.dart';
+import 'package:travelcopilot/features/trips/data/trip_cache.dart';
 import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
 import 'package:travelcopilot/features/trips/ui/trip_detail_screen.dart';
@@ -44,12 +46,16 @@ void main() {
     api = _MockTripsApi();
     invitesApi = _MockInvitesApi();
     when(() => invitesApi.list(any())).thenAnswer((_) async => []);
+    // 목록 갱신 뒤 스냅샷 미리 받기 (features/sync-offline.md 5.6). 테스트마다 필요하면 덮어쓴다
+    when(() => api.snapshot(any())).thenThrow(const NetworkException());
     final auth = _MockAuthRepository();
     when(auth.restoreSession).thenAnswer((_) async => _me);
     container = ProviderContainer(
       retry: disableAutoRetry,
       overrides: [
         tripsApiProvider.overrideWithValue(api),
+        // 기기 DB 대신 메모리 DB (테스트마다 새로)
+        tripCacheProvider.overrideWith((ref) => TripCache.memory()),
         invitesApiProvider.overrideWithValue(invitesApi),
         authRepositoryProvider.overrideWithValue(auth),
       ],
@@ -282,6 +288,87 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('목록 화면'), findsOneWidget);
+  });
+
+  group('F6 오프라인 (features/sync-offline.md)', () {
+    void goOffline() => container.read(connectivityProvider.notifier).report(reached: false);
+
+    testWidgets('서버에 닿지 못해도 저장된 목록과 마지막 동기화 시각을 보여준다', (tester) async {
+      await container.read(tripCacheProvider).replaceTrips([
+        makeTrip(title: '저장된 여행', start: DateTime(2026, 12), end: DateTime(2026, 12, 3)),
+      ], DateTime.now().subtract(const Duration(hours: 3, minutes: 5)));
+      when(api.fetchAll).thenThrow(const NetworkException());
+      goOffline();
+
+      await pump(tester, TripListScreen(today: DateTime(2026, 11, 15)));
+
+      expect(find.text('저장된 여행'), findsOneWidget);
+      expect(find.byKey(const Key('offline-banner')), findsOneWidget);
+      expect(find.text('오프라인 · 마지막 동기화: 3시간 전'), findsOneWidget);
+    });
+
+    testWidgets('온라인이면 배너가 없다', (tester) async {
+      when(api.fetchAll).thenAnswer((_) async => [makeTrip()]);
+      container.read(connectivityProvider.notifier).report(reached: true);
+
+      await pump(tester, TripListScreen(today: DateTime(2026, 11, 15)));
+
+      expect(find.byKey(const Key('offline-banner')), findsNothing);
+    });
+
+    testWidgets('오프라인이면 여행 만들기를 막고 안내한다', (tester) async {
+      when(api.fetchAll).thenAnswer((_) async => []);
+      goOffline();
+      await pump(tester, TripListScreen(today: DateTime(2026, 11, 15)));
+
+      await tester.tap(find.text('여행 만들기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('연결 후 수정할 수 있습니다.'), findsOneWidget);
+      expect(find.byType(TripFormScreen), findsNothing);
+    });
+
+    testWidgets('오프라인이면 여행 상세를 캐시로 보여주고 나가기를 막는다', (tester) async {
+      final cache = container.read(tripCacheProvider);
+      await cache.saveSnapshot(
+        TripSnapshot(
+          trip: makeTrip(role: TripRole.editor),
+          members: [makeMember('me', '나여행', TripRole.editor)],
+        ),
+        DateTime.now().subtract(const Duration(minutes: 10)),
+      );
+      when(() => api.snapshot('t1')).thenThrow(const NetworkException());
+      goOffline();
+
+      await pump(tester, const TripDetailScreen(tripId: 't1'));
+      expect(find.text('파리 가족여행'), findsOneWidget);
+      expect(find.text('오프라인 · 마지막 동기화: 10분 전'), findsOneWidget);
+
+      await tester.tap(find.text('멤버'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(OutlinedButton, '여행 나가기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('연결 후 수정할 수 있습니다.'), findsOneWidget);
+      verifyNever(() => api.removeMember(any(), any()));
+    });
+
+    testWidgets('캐시로 보던 여행이 404면 안내로 바뀌고 기기 캐시도 지운다 (T08)', (tester) async {
+      final cache = container.read(tripCacheProvider);
+      await cache.replaceTrips([makeTrip()], DateTime(2026, 11, 14));
+      await cache.saveSnapshot(
+        TripSnapshot(trip: makeTrip(), members: const []),
+        DateTime(2026, 11, 14),
+      );
+      when(() => api.snapshot('t1'))
+          .thenThrow(const ServerException(statusCode: 404, code: 'not_found'));
+
+      await pump(tester, const TripDetailScreen(tripId: 't1'));
+
+      expect(find.text('접근할 수 없는 여행입니다.'), findsOneWidget);
+      expect(await cache.readSnapshot('t1'), isNull);
+      expect((await cache.readTrips())!.data, isEmpty);
+    });
   });
 
   group('S04 여행 만들기·수정', () {

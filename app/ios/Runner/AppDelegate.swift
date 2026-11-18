@@ -35,5 +35,25 @@ import UIKit
         }
       }
     }
+    // 여행 캐시 폴더를 iCloud·기기 백업에서 제외한다 (features/sync-offline.md 5.8, T19)
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "TravelCopilotStorage") {
+      let channel = FlutterMethodChannel(
+        name: "travelcopilot/storage", binaryMessenger: registrar.messenger())
+      channel.setMethodCallHandler { call, result in
+        guard call.method == "excludeFromBackup", let path = call.arguments as? String else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        var url = URL(fileURLWithPath: path, isDirectory: true)
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        do {
+          try url.setResourceValues(values)
+          result(nil)
+        } catch {
+          result(FlutterError(code: "exclude_failed", message: nil, details: nil))
+        }
+      }
+    }
   }
 }

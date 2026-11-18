@@ -7,6 +7,7 @@ import 'package:travelcopilot/features/trips/data/trip_models.dart';
 import 'package:travelcopilot/features/trips/data/trip_rules.dart';
 import 'package:travelcopilot/features/trips/data/trips_api.dart';
 import 'package:travelcopilot/features/trips/state/trips_providers.dart';
+import 'package:travelcopilot/features/trips/ui/offline_banner.dart';
 import 'package:travelcopilot/features/trips/ui/timezone_picker.dart';
 import 'package:travelcopilot/features/trips/ui/trip_actions.dart';
 import 'package:travelcopilot/l10n/gen/app_localizations.dart';
@@ -114,6 +115,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
   );
 
   Future<void> _save() async {
+    if (!ensureOnline(context, ref)) return;
     if (!_validate()) return;
     setState(() => _saving = true);
     try {

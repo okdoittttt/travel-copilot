@@ -1,7 +1,7 @@
 # 실행 가이드
 
 > 로컬에서 Travel Copilot을 설정하고, 실행하고, 동작을 확인하는 방법.
-> 기준: F5(초대 링크) 구현 시점 (2026-11-15). 기능이 추가될 때마다 이 문서를 갱신한다.
+> 기준: F6(동기화·오프라인 일정) 구현 시점 (2026-11-15). 기능이 추가될 때마다 이 문서를 갱신한다.
 
 ## 1. 구성 한눈에 보기
 
@@ -237,6 +237,13 @@ C="docker compose --env-file .env -f infra/docker-compose.yml"
 | 47 | 내보낼 때 링크 폐기 | 열린 링크가 있는 상태에서 멤버 내보내기 | 대화상자에 "열린 초대 링크도 모두 폐기 (N개)" 체크됨. 내보낸 뒤 목록의 링크가 "폐기됨" |
 | 48 | 안내 웹페이지(W01) | 브라우저로 `https://localhost/invite` | 설치 안내 페이지. 개발자 도구 응답 헤더에 `Content-Security-Policy` |
 | 49 | 앱 링크 확인 파일 | `curl --cacert "$CA" https://localhost/.well-known/apple-app-site-association` (assetlinks.json도) | JSON, `content-type: application/json`. 팀 ID·인증서 지문은 아직 자리 표시 값 (P1·P4 후 교체) |
+| 50 | 캐시 저장 | 온라인에서 여행 목록을 열고, 여행 두 개를 각각 열어 본다 | 평소와 같음 (뒤에서 기기 DB에 저장됨) |
+| 51 | 오프라인 시작 | `$C stop nginx` (또는 Mac Wi-Fi 끄기) → 앱을 완전히 종료(`q`) 후 다시 `flutter run` | 로그인 화면 없이 "내 여행"이 저장된 목록으로 보이고, 위에 "오프라인 · 마지막 동기화: N분 전" 배너 |
+| 52 | 오프라인 일정 | 50에서 연 여행 → 일정 탭 | 제목·시각·메모가 보이고, 이동 구간 자리에 "오프라인 — 이동시간은 연결 후 표시됩니다", [지도]는 "지도는 연결 후 볼 수 있습니다" |
+| 53 | 오프라인 수정 차단 | [여행 만들기], [일정 추가], 메뉴의 여행 수정, 멤버 탭 [초대 링크] | "연결 후 수정할 수 있습니다." 안내, 화면 이동·요청 없음 |
+| 54 | 다시 연결 | `$C start nginx` → 배너의 [다시 시도] (또는 홈으로 나갔다가 앱으로 돌아오기) | 배너가 사라지고 최신 내용 |
+| 55 | 내보내진 여행 정리 (T08) | 두 번째 계정을 여행에 넣은 뒤(43) 그 계정으로 여행을 한 번 연다 → 첫 계정이 내보내기 → 두 번째 계정에서 목록 당겨서 새로고침 → 다시 51처럼 오프라인으로 | 여행이 목록에서 사라지고, 오프라인에서도 보이지 않음 |
+| 56 | 계정 전환 정리 (T34) | 계정 A로 여행을 본 뒤 로그아웃 → 계정 B로 로그인 → 51처럼 오프라인 | A의 여행이 보이지 않음 |
 
 ### 5.1 수동 확인 도우미 (로컬 전용)
 
@@ -298,6 +305,8 @@ curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type:
 | 앱 시작 시 `API_BASE_URL이 없거나 HTTPS가 아닙니다` | `--dart-define-from-file` 빠짐 | `flutter run --dart-define-from-file=env/local.json` |
 | pytest가 `TEST_DATABASE_URL 환경변수가 필요합니다`로 실패 | 환경변수 미설정 | 4.1의 `export` 두 줄 실행 |
 | 테스트 DB가 없다는 에러 | DB 볼륨이 테스트 DB 생성 스크립트 추가 전에 만들어짐 | `$C down -v` 후 다시 `up` (개발 DB 데이터도 지워짐) |
+| 오프라인 배너가 계속 남아 있음 | 마지막 요청이 서버에 닿지 못했다 (앱은 OS 연결 상태가 아니라 실제 요청 결과로 판단) | 서버·nginx가 켜져 있는지 확인 후 배너의 [다시 시도] |
+| 기기 캐시를 비우고 처음부터 확인하고 싶음 | 캐시는 로그아웃 때 지워진다 | 앱에서 로그아웃, 또는 시뮬레이터에서 앱 삭제 |
 | CI `생성 파일이 커밋되지 않았습니다` | 코드 생성 결과 미커밋 | 3.4 실행 후 생성 파일 커밋 |
 | 서버가 `JWT_SECRET` 관련 에러로 시작 안 됨 | `.env`에 값이 없거나 32자 미만 | `openssl rand -base64 48`로 만들어 `.env`에 추가 |
 | 앱 시작 시 `GOOGLE_SERVER_CLIENT_ID가 없습니다` | `env/*.json`에 값 없음 | 웹 클라이언트 ID 입력 |
@@ -309,7 +318,8 @@ curl --cacert "$CA" -X PATCH -H "Authorization: Bearer $TOKEN" -H 'content-type:
 
 | 항목 | 시점 |
 |---|---|
-| Android 에뮬레이터 실행 확인 (F1~F5) | F5 직후 Android Studio 설치 후 한 번에 (features/invites.md 12절) |
+| Android 에뮬레이터 실행 확인 (F1~F6, 백업 제외 포함) | Android Studio 설치 후 한 번에 (features/invites.md 12절) |
+| 실기기 비행기 모드 확인 | P1(실기기 설치) 후. 시뮬레이터에는 비행기 모드가 없어 nginx 중지로 대신한다 |
 | 링크를 눌러 앱 열기 (Universal Links·App Links) | P1(Apple Developer)·P4(도메인)·스테이징 준비 후 |
 | 카카오·Apple 로그인 | F10 |
 | 파일 저장소(S3 호환) | F7 (MinIO 공식 이미지 배포 중단, 대체 도구는 F7 명세에서 결정) |

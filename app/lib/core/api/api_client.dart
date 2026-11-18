@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:travelcopilot/core/api/auth_interceptor.dart';
 import 'package:travelcopilot/core/config/app_config.dart';
+import 'package:travelcopilot/core/state/connectivity.dart';
 import 'package:travelcopilot/core/storage/token_storage.dart';
 import 'package:travelcopilot/features/auth/state/auth_controller.dart';
 
@@ -21,6 +22,12 @@ Dio apiClient(Ref ref) {
   final dio = Dio(_baseOptions());
   // 갱신 요청은 인터셉터가 없는 별도 클라이언트로 보낸다 (갱신 실패가 다시 갱신을 부르지 않게)
   final refreshClient = Dio(_baseOptions());
+  dio.interceptors.add(
+    // 호출 시점에 읽는다 (요청이 끝난 뒤라 provider 초기화 중 변경이 아님)
+    ConnectivityInterceptor(
+      ({required reached}) => ref.read(connectivityProvider.notifier).report(reached: reached),
+    ),
+  );
   dio.interceptors.add(
     AuthInterceptor(
       storage: ref.watch(tokenStorageProvider),
